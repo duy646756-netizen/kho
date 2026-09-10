@@ -1,0 +1,339 @@
+<title>Dùng App Kho Chỉ Chính Hãng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@700&display=swap">
+
+<style>
+:root{
+  --ground:#FBF0F2; --panel:#FFFFFF; --sunk:#F7E7EB;
+  --line:#EEDAE0; --line-soft:#F5E6EA;
+  --ink:#211A1D; --ink-2:#6E5C63; --ink-3:#9F8B93;
+  --brand:#D93A55; --brand-soft:#FBE1E6; --on-brand:#FFFFFF;
+  --thu:#08949C; --thu-soft:#DDEFF1;
+  --warn:#B26A0A; --warn-soft:#FBEBD4;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#171216; --panel:#1F191D; --sunk:#2A2228;
+    --line:#372C33; --line-soft:#2B2229;
+    --ink:#F7EFF2; --ink-2:#AC9AA2; --ink-3:#7C6B74;
+    --brand:#F04E66; --brand-soft:rgba(240,78,102,.16); --on-brand:#2A0A11;
+    --thu:#12A9B0; --thu-soft:rgba(18,169,176,.16);
+    --warn:#E0A340; --warn-soft:rgba(224,163,64,.16);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#171216; --panel:#1F191D; --sunk:#2A2228;
+  --line:#372C33; --line-soft:#2B2229;
+  --ink:#F7EFF2; --ink-2:#AC9AA2; --ink-3:#7C6B74;
+  --brand:#F04E66; --brand-soft:rgba(240,78,102,.16); --on-brand:#2A0A11;
+  --thu:#12A9B0; --thu-soft:rgba(18,169,176,.16);
+  --warn:#E0A340; --warn-soft:rgba(224,163,64,.16);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:Roboto,'Segoe UI',system-ui,sans-serif;
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.cd{font-family:'Roboto Condensed',Roboto,sans-serif}
+.wrap{max-width:660px;margin:0 auto;padding:28px 18px 64px}
+@media (min-width:700px){.wrap{padding:44px 24px 80px}}
+
+/* ---- đầu trang ---- */
+.top{display:flex;align-items:center;gap:13px;margin-bottom:26px}
+.mark{width:40px;height:36px;flex:none;fill:none;stroke:var(--brand);stroke-width:7}
+h1{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:29px;font-weight:700;
+  letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1.1;text-wrap:balance}
+.top p{margin:3px 0 0;font-size:13px;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
+
+.mo{background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;
+  padding:16px 18px;margin-bottom:30px}
+.mo p{margin:0;font-size:15.5px;color:var(--ink-2)}
+.mo b{color:var(--ink)}
+
+/* ---- mục ---- */
+.muc{margin-bottom:34px}
+h2{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:14px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  margin:0 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+
+.viec{background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;
+  padding:17px 18px;margin-bottom:11px}
+.viec h3{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:19px;font-weight:700;
+  letter-spacing:.01em;margin:0 0 10px;line-height:1.25;display:flex;align-items:center;
+  gap:9px;flex-wrap:wrap}
+.chu{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  background:var(--brand-soft);color:var(--brand);padding:3px 8px;border-radius:99px;
+  font-family:'Roboto Condensed',Roboto,sans-serif}
+.viec p{margin:0 0 9px;font-size:15px;color:var(--ink-2)}
+.viec p:last-child{margin-bottom:0}
+.viec b{color:var(--ink)}
+
+/* chuỗi thao tác: đúng thứ tự ngón tay chạm */
+.cham{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 11px}
+.cham span{background:var(--sunk);color:var(--ink);font-family:'Roboto Condensed',Roboto,sans-serif;
+  font-weight:700;font-size:14px;letter-spacing:.04em;padding:6px 11px;border-radius:7px;
+  white-space:nowrap}
+.cham span.nhan{background:var(--brand);color:var(--on-brand)}
+.cham i{color:var(--ink-3);font-style:normal;font-size:15px;line-height:1}
+
+ol,ul{margin:0 0 9px;padding-left:21px;font-size:15px;color:var(--ink-2)}
+li{margin-bottom:5px}
+li:last-child{margin-bottom:0}
+li b{color:var(--ink)}
+
+.luuy{display:flex;gap:10px;background:var(--warn-soft);border-radius:8px;
+  padding:11px 13px;margin-top:11px}
+.luuy svg{width:17px;height:17px;flex:none;margin-top:2px;stroke:var(--warn);fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.luuy p{margin:0;font-size:14px;color:var(--ink-2);line-height:1.55}
+.luuy b{color:var(--ink)}
+
+.tot{background:var(--thu-soft);border-radius:8px;padding:11px 13px;margin-top:11px}
+.tot p{margin:0;font-size:14px;color:var(--ink-2)}
+.tot b{color:var(--thu)}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:2px 0 0}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;font-size:12px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+td:last-child,th:last-child{text-align:right;white-space:nowrap}
+.co{color:var(--thu);font-weight:500}
+.khong{color:var(--ink-3)}
+
+.chan{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);
+  font-size:14px;color:var(--ink-3);line-height:1.7}
+.chan b{color:var(--ink-2)}
+</style>
+
+<div class="wrap">
+
+  <div class="top">
+    <svg class="mark" viewBox="0 0 116 100" aria-hidden="true"><path d="M32 5 H84 L111 50 L84 95 H32 L5 50 Z"/></svg>
+    <div>
+      <h1>Dùng app kho</h1>
+      <p>Chỉ Chính Hãng VN</p>
+    </div>
+  </div>
+
+  <div class="mo">
+    <p><b>Cả app chỉ có 5 mục ở thanh dưới cùng</b> (điện thoại) hoặc bên trái (máy tính).
+    Người trông quán chỉ cần dùng <b>Tra cứu</b>. Bốn mục còn lại là của chủ shop.</p>
+  </div>
+
+  <!-- ================= MỞ APP ================= -->
+  <section class="muc">
+    <h2>Lần đầu mở app</h2>
+
+    <div class="viec">
+      <h3>Cài app lên iPhone</h3>
+      <div class="cham">
+        <span>Mở Safari</span><i>›</i><span>vào link app</span><i>›</i>
+        <span>nút Chia sẻ</span><i>›</i><span class="nhan">Thêm vào MH chính</span>
+      </div>
+      <p>Icon logo cửa hàng hiện trên màn hình chính, bấm vào mở toàn màn hình như app thường.</p>
+      <div class="luuy">
+        <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 4.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <p>Phải mở bằng <b>Safari</b>. Chrome trên iPhone không có mục "Thêm vào MH chính".</p>
+      </div>
+    </div>
+
+    <div class="viec">
+      <h3>Đăng nhập</h3>
+      <p>Gõ tài khoản và mật khẩu, bấm <b>Đăng nhập</b>. Máy nhớ luôn, lần sau mở là vào thẳng.</p>
+    </div>
+  </section>
+
+  <!-- ================= BÁN HÀNG ================= -->
+  <section class="muc">
+    <h2>Việc làm hằng ngày</h2>
+
+    <div class="viec">
+      <h3>Khách hỏi còn size không</h3>
+      <div class="cham">
+        <span class="nhan">Tra cứu</span><i>›</i><span>gõ tên</span><i>›</i><span>chạm vào món</span>
+      </div>
+      <p>Gõ ngắn thôi: <b>af1</b>, <b>samba</b>, <b>dép</b>. Gõ không dấu cũng ra.
+      Gõ hai từ càng gọn: <b>nike 42</b>, <b>giày đỏ</b>.</p>
+      <p>Chạm vào món sẽ hiện các ô size hình tổ ong:</p>
+      <ul>
+        <li>Ô <b>đậm</b> — còn hàng, có ghi còn mấy cái</li>
+        <li>Ô <b>vàng cam</b> — chỉ còn 1 cái</li>
+        <li>Ô <b>mờ</b> — hết size đó</li>
+      </ul>
+      <div class="tot">
+        <p>Dòng <b>VỊ TRÍ TRONG KHO</b> cho biết hàng nằm ở kệ nào thùng nào — lên kho lấy thẳng, không phải bới.</p>
+      </div>
+    </div>
+
+    <div class="viec">
+      <h3>Bán một món</h3>
+      <div class="cham">
+        <span>chạm món</span><i>›</i><span>chạm size</span><i>›</i>
+        <span>Tiền mặt / Chuyển khoản</span><i>›</i><span class="nhan">Bán ngay</span>
+      </div>
+      <p>Xong. Kho tự trừ, tiền tự vào sổ.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Khách mua nhiều món</h3>
+      <div class="cham">
+        <span>mỗi món bấm</span><i>›</i><span class="nhan">+ Thêm vào giỏ</span><i>›</i>
+        <span>bấm thanh giỏ đỏ ở đáy</span><i>›</i><span class="nhan">Thanh toán</span>
+      </div>
+      <p>Thanh đỏ dưới đáy màn hình luôn hiện <b>số món</b> và <b>tổng tiền</b> để đọc cho khách.
+      Trong giỏ có nút <b>−</b> và <b>+</b> để sửa số lượng, thùng rác để bỏ món.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Khách chuyển khoản</h3>
+      <p>Chọn <b>Chuyển khoản</b> rồi bấm thanh toán — app hiện <b>mã QR đã có sẵn số tiền</b>.
+      Khách mở app ngân hàng quét là xong, không phải gõ gì.</p>
+      <div class="luuy">
+        <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 4.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <p>Chỉ bấm <b>"Khách chuyển xong — chốt đơn"</b> khi <b>điện thoại đã báo tiền về</b>.
+        App không tự biết được tiền đã vào tài khoản hay chưa.</p>
+      </div>
+    </div>
+
+    <div class="viec">
+      <h3>Bán nhầm, khách trả hàng <span class="chu">Chủ shop</span></h3>
+      <div class="cham">
+        <span class="nhan">Thu chi</span><i>›</i><span>thùng rác ở dòng đó</span><i>›</i>
+        <span class="nhan">Huỷ đơn &amp; trả hàng về kho</span>
+      </div>
+      <p>Hàng được cộng trả lại kho, khoản thu bị xoá khỏi sổ. Số liệu khớp lại như chưa bán.</p>
+    </div>
+  </section>
+
+  <!-- ================= HÀNG HOÁ ================= -->
+  <section class="muc">
+    <h2>Quản lý hàng hoá <span class="chu">Chủ shop</span></h2>
+
+    <div class="viec">
+      <h3>Thêm mẫu mới</h3>
+      <div class="cham">
+        <span class="nhan">Nhập hàng</span><i>›</i><span>Mẫu mới</span><i>›</i>
+        <span>điền tên, hãng, loại, giá</span><i>›</i><span>chạm ô size</span><i>›</i>
+        <span class="nhan">Lưu &amp; thêm mẫu tiếp</span>
+      </div>
+      <p><b>Chạm thẳng vào ô size để cộng 1.</b> Chạm dấu <b>−</b> góc trên để bớt.
+      Về cả lô đều nhau thì bấm <b>Mỗi size 1</b> hoặc <b>Mỗi size 2</b>.</p>
+      <div class="tot">
+        <p>Lưu xong app <b>giữ lại Hãng, Loại và Vị trí</b>, chỉ xoá tên và giá.
+        Nhập cả lô cùng hãng cùng kệ thì mẫu sau gõ nhanh hơn hẳn.</p>
+      </div>
+    </div>
+
+    <div class="viec">
+      <h3>Mẫu cũ về thêm hàng</h3>
+      <div class="cham">
+        <span class="nhan">Nhập hàng</span><i>›</i><span>Về thêm hàng</span><i>›</i>
+        <span>tìm tên</span><i>›</i><span>chạm ô size</span><i>›</i><span class="nhan">Lưu</span>
+      </div>
+      <p>Không phải khai lại tên, giá hay vị trí.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Sửa giá, thêm ảnh, sửa số tồn</h3>
+      <div class="cham">
+        <span>chạm món</span><i>›</i><span class="nhan">Sửa mẫu này</span>
+      </div>
+      <ul>
+        <li><b>Chụp ảnh hoặc chọn từ máy</b> — ảnh tự nén, cần có mạng</li>
+        <li>Sửa tên, hãng, màu, vị trí, giá nhập, giá bán</li>
+        <li><b>Số lượng thật trong kho</b> — dùng khi kiểm kê hoặc lúc nhập gõ nhầm.
+        Số bạn đặt là số cuối cùng, không cộng thêm</li>
+      </ul>
+    </div>
+
+    <div class="viec">
+      <h3>Xoá mẫu không bán nữa</h3>
+      <div class="cham">
+        <span>chạm món</span><i>›</i><span>Sửa mẫu này</span><i>›</i>
+        <span>kéo xuống cuối</span><i>›</i><span class="nhan">Xoá mẫu này</span>
+      </div>
+      <p>Mẫu biến mất khỏi app. <b>Doanh thu và lịch sử bán cũ vẫn giữ nguyên</b> để sổ sách không sai.</p>
+    </div>
+  </section>
+
+  <!-- ================= TIỀN ================= -->
+  <section class="muc">
+    <h2>Tiền nong <span class="chu">Chủ shop</span></h2>
+
+    <div class="viec">
+      <h3>Ghi tiền nhà, điện nước, tiền ship</h3>
+      <div class="cham">
+        <span class="nhan">Thu chi</span><i>›</i><span class="nhan">+ Thêm khoản thu / chi</span>
+      </div>
+      <p>Khoản <b>Bán hàng</b> và <b>Nhập hàng</b> app tự ghi, bạn không phải nhập.
+      Chỉ thêm tay những khoản còn lại.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Xem lãi, xem hàng bán chạy</h3>
+      <div class="cham"><span class="nhan">Dashboard</span></div>
+      <ul>
+        <li>Doanh thu, lãi gộp, chi phí trong tháng</li>
+        <li>Biểu đồ tiền vào tiền ra 7 ngày</li>
+        <li>Hàng bán chạy và <b>danh sách sắp hết cần nhập thêm</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= NGƯỜI TRÔNG QUÁN ================= -->
+  <section class="muc">
+    <h2>Người trông quán làm được gì</h2>
+    <div class="viec">
+      <table>
+        <thead><tr><th>Việc</th><th>Được không</th></tr></thead>
+        <tbody>
+          <tr><td>Tra size, tra giá bán</td><td class="co">Được</td></tr>
+          <tr><td>Bán hàng, nhận chuyển khoản</td><td class="co">Được</td></tr>
+          <tr><td>Xem <b>giá nhập</b> và tiền lãi</td><td class="khong">Không</td></tr>
+          <tr><td>Nhập hàng, sửa giá, xoá mẫu</td><td class="khong">Không</td></tr>
+          <tr><td>Xem sổ thu chi, xem Dashboard</td><td class="khong">Không</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px">Tạo tài khoản cho họ ở <b>Cài đặt → Người dùng → + Thêm tài khoản</b>,
+      chọn vai trò <b>Nhân viên</b>.</p>
+    </div>
+  </section>
+
+  <!-- ================= TRỤC TRẶC ================= -->
+  <section class="muc">
+    <h2>Khi có trục trặc</h2>
+
+    <div class="viec">
+      <h3>Góc trên hiện "3 chờ gửi"</h3>
+      <p>Mạng yếu nên vài thao tác chưa lên Google. <b>Không mất gì cả</b> — có mạng lại app tự gửi.
+      Muốn gửi ngay: <b>Cài đặt → Tải lại</b>.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Mất mạng hẳn</h3>
+      <p>Vẫn <b>tra cứu và bán được</b> bình thường. App giữ lại đơn, có mạng là gửi đi.
+      Chỉ có <b>thêm ảnh</b> là bắt buộc phải có mạng.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Báo "Máy chủ chưa cập nhật"</h3>
+      <p>Vào Apps Script bấm <b>Triển khai → Quản lý bản triển khai → bút chì → Phiên bản: Mới → Triển khai</b>.</p>
+    </div>
+
+    <div class="viec">
+      <h3>Máy này thấy hàng, máy kia chưa</h3>
+      <p>Vào <b>Cài đặt → Tải lại</b> ở máy chưa thấy.</p>
+    </div>
+  </section>
+
+  <p class="chan">
+    <b>Dữ liệu nằm ở đâu:</b> tất cả lưu trong Google Sheet của chủ shop, không nằm trong điện thoại.
+    Mất máy, vỡ máy, đổi máy mới — cài lại app đăng nhập là có đủ.
+    Mỗi đêm 2 giờ sáng hệ thống tự sao lưu một bản.<br><br>
+    <b>Nên làm mỗi tháng:</b> vào <b>Cài đặt → Tải kho về máy</b>, lưu file lại. Đây là lớp phòng thân cuối cùng.
+  </p>
+
+</div>
