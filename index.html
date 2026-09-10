@@ -235,10 +235,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .scrim{position:fixed;inset:0;background:rgba(35,15,22,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
 .scrim.on{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--panel);border-top:3px solid var(--brand);border-radius:12px 12px 0 0;box-shadow:var(--shadow);max-height:92dvh;overflow-y:auto;transform:translateY(101%);transition:transform .26s cubic-bezier(.2,.8,.25,1)}
-.sheet.on{transform:translateY(0)}
+.sheet{pointer-events:none}
+.sheet.on{transform:translateY(0);pointer-events:auto}
 @media (min-width:900px){
   .sheet{left:50%;right:auto;bottom:auto;top:50%;width:min(580px,92vw);border-radius:8px;transform:translate(-50%,-44%) scale(.97);opacity:0;transition:transform .22s,opacity .22s;max-height:88dvh}
-  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
 }
 .grab{width:38px;height:4px;background:var(--line);border-radius:99px;margin:9px auto 0}
 @media (min-width:900px){.grab{display:none}}
@@ -1285,10 +1286,11 @@ function veSize(){
   if(!keys.length){ g.innerHTML = '<p class="note">Chưa có bộ size.</p>'; return; }
   g.innerHTML = keys.map(s => {
     const n = impSizes[s] || 0;
-    return '<button type="button" class="sz' + (n ? ' co' : '') + '" data-s="' + s + '">'
-      + '<span class="lb">' + s + '</span>'
-      + '<span class="n">' + n + '</span>'
-      + (n ? '<span class="tru" data-tru="' + s + '">−</span>' : '')
+    return '<button type="button" class="sz' + (n ? ' co' : '') + '" data-s="' + s + '"'
+      + ' aria-label="Size ' + s + ', đang ' + n + ' — chạm để thêm 1">'
+      + '<span class="lb" aria-hidden="true">' + s + '</span>'
+      + '<span class="n" aria-hidden="true">' + n + '</span>'
+      + (n ? '<span class="tru" role="button" aria-label="Bớt 1 size ' + s + '" data-tru="' + s + '">−</span>' : '')
       + '</button>';
   }).join('');
   $$('#szGrid .sz').forEach(b => b.onclick = e => {
