@@ -242,6 +242,8 @@ Ba cách, chọn cái tiện nhất lúc đó:
 | *"Không nối được máy chủ"* | Dán lại đường dẫn Apps Script ở mục **Địa chỉ máy chủ**. Phải kết thúc bằng **`/exec`**, không phải `/dev` |
 | Huy hiệu **"N chờ gửi"** không chịu hết | Mất mạng. Có mạng lại nó tự gửi, hoặc vào **Cài đặt → Tải lại** |
 | Sửa mã trong Apps Script xong app không đổi | Phải **Triển khai → Quản lý bản triển khai → sửa (bút chì) → Phiên bản: Mới → Triển khai** |
+| *"Đã xảy ra lỗi không xác định"* khi chạy `khoiTao` | Dán lại `Code.gs` bản mới nhất rồi chạy lại. Chạy lại nhiều lần không hỏng dữ liệu đã có |
+| Muốn xem lỗi thật là gì | Trong Apps Script bấm **Nhật ký thực thi**, mở dòng lỗi ra xem dòng chi tiết bên dưới |
 | Lỡ xoá nhầm dữ liệu trong bảng tính | Trong Google Sheets: **Tệp → Lịch sử phiên bản → Xem lịch sử phiên bản**, chọn mốc trước lúc xoá rồi khôi phục |
 | Muốn khoá tài khoản ai đó | Mở tab **NguoiDung**, sửa cột *TrangThai* thành `khoa` |
 
