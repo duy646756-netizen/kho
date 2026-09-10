@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 title Day app len GitHub - Kho Chi Chinh Hang
 cd /d "%~dp0"
 
@@ -7,82 +8,131 @@ echo ==================================================
 echo    DAY APP KHO CHI CHINH HANG LEN GITHUB
 echo ==================================================
 echo.
-echo Truoc khi chay, ban phai co:
-echo   1. Tai khoan github.com
-echo   2. Kho ten "kho", chon Public
-echo      (KHONG tich "Add a README file")
-echo.
-set /p U=Ten tai khoan GitHub cua ban:
 
-if "%U%"=="" (
+rem --- xem con bao nhieu ban va chua day len ---
+for /f %%i in ('git rev-list --count origin/main..HEAD 2^>nul') do set CHO=%%i
+if "!CHO!"=="" set CHO=?
+if "!CHO!"=="0" (
+  echo Tren GitHub da la ban moi nhat roi.
+) else (
+  echo Dang co !CHO! ban va CHUA duoc day len GitHub.
+)
+echo.
+
+rem --- da tung noi kho chua ---
+for /f "delims=" %%i in ('git remote get-url origin 2^>nul') do set CUURL=%%i
+if not "!CUURL!"=="" (
+  echo Kho da noi: !CUURL!
   echo.
-  echo Ban chua nhap gi ca. Dong cua so roi chay lai.
-  echo.
-  pause
-  exit /b
+)
+
+set /p U=Ten tai khoan GitHub cua ban [Enter de dung cai cu]:
+if "!U!"=="" if "!CUURL!"=="" goto THIEUTEN
+if not "!U!"=="" (
+  git remote remove origin >nul 2>&1
+  git remote add origin https://github.com/!U!/kho.git
 )
 
 echo.
 echo --------------------------------------------------
 echo  DIA CHI MAY CHU (Apps Script)
 echo --------------------------------------------------
-echo Dan link Ung dung web cua Apps Script vao day.
-echo No co dang:  https://script.google.com/macros/s/AKfy.../exec
 echo.
-echo Gan san mot lan o day thi SAU NAY KHONG MAY NAO PHAI DAN NUA.
-echo Bo trong neu ban muon tu dan tay trong app.
+echo  QUAN TRONG: dan vao day thi sau nay MO APP LA DANG NHAP LUON,
+echo  khong may nao phai dan link nua.
 echo.
-set /p A=Dia chi may chu:
+echo  Lay o dau: Apps Script ^> Trien khai ^> Quan ly ban trien khai
+echo             ^> chep duong dan "Ung dung web"
+echo  No co dang: https://script.google.com/macros/s/AKfy.../exec
+echo.
+call :XEMDAGAN
+echo.
+set /p A=Dan dia chi vao day [Enter de bo qua]:
 
-if not "%A%"=="" (
-  echo %A% | findstr /E /C:"/exec" >nul
-  if errorlevel 1 (
-    echo.
-    echo !! Dia chi phai ket thuc bang  /exec  chu khong phai /dev
-    echo    Kiem tra lai roi chay lai file nay.
-    echo.
-    pause
-    exit /b
-  )
-  echo.
-  echo Dang gan dia chi may chu vao app...
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0gan-dia-chi.ps1" -DiaChi "%A%"
-  if errorlevel 1 (
-    echo Khong gan duoc. Van tiep tuc day len, ban se dan tay trong app.
-  ) else (
-    echo Da gan xong.
-  )
-  git add index.html >nul 2>&1
-  git -c core.autocrlf=false commit -q -m "Gan dia chi may chu" >nul 2>&1
-)
+if "!A!"=="" goto BOQUA
+rem KHONG duoc de dau cach truoc dau | vi echo se them dau cach vao cuoi,
+rem lam phep so "ket thuc bang /exec" truot oan.
+echo !A!| findstr /E /C:"/exec" >nul
+if errorlevel 1 goto SAIDIACHI
 
 echo.
-echo Dang noi toi kho: https://github.com/%U%/kho.git
-git remote remove origin >nul 2>&1
-git remote add origin https://github.com/%U%/kho.git
+echo Dang gan dia chi may chu vao app...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0gan-dia-chi.ps1" -DiaChi "!A!"
+if errorlevel 1 goto GANHONG
+git add index.html >nul 2>&1
+git -c core.autocrlf=false commit -q -m "Gan dia chi may chu" >nul 2>&1
+echo    -^> Da gan xong.
+goto DAYLEN
 
-echo Dang day file len...
+:SAIDIACHI
+echo.
+echo  !! SAI DIA CHI: phai ket thuc bang  /exec  chu khong phai /dev
+echo     Dong cua so, lay lai dia chi dung roi chay lai file nay.
+echo.
+pause
+exit /b
+
+:GANHONG
+echo    -^> Khong gan duoc, van tiep tuc day len.
+goto DAYLEN
+
+:BOQUA
+echo.
+echo  ^>^> Ban da BO QUA buoc gan dia chi.
+echo     Nghia la moi lan mo app tren may moi, ban van phai tu dan link.
+echo     Muon khoi phai dan: chay lai file nay va dan dia chi vao.
+echo.
+
+:DAYLEN
+echo.
+echo Dang day file len GitHub...
 echo (Neu hien cua so dang nhap GitHub thi dang nhap binh thuong)
 echo.
 git push -u origin main
-
 if errorlevel 1 goto LOI
 
+rem --- kiem tra that su da len chua ---
+git fetch origin >nul 2>&1
+for /f %%i in ('git rev-list --count origin/main..HEAD 2^>nul') do set CONLAI=%%i
+if not "!CONLAI!"=="0" goto CHUALEN
+
 echo.
 echo ==================================================
-echo    XONG!
+echo    DA LEN GITHUB THANH CONG
 echo ==================================================
+call :XEMDAGAN
 echo.
-echo Dia chi app cua ban:
-echo    https://%U%.github.io/kho/
+echo Doi 1-2 phut cho GitHub dung xong, roi mo:
+for /f "delims=" %%i in ('git remote get-url origin') do echo    %%i
 echo.
-echo Doi 1-2 phut cho GitHub dung xong roi mo len.
+echo TREN DIEN THOAI: dong han app di roi mo lai moi nhan ban moi.
 echo.
-echo Neu day la lan dau, vao https://github.com/%U%/kho
-echo   Settings ^> Pages ^> Source: Deploy from a branch
-echo   Branch: main + / (root) ^> Save
+pause
+exit /b
+
+:XEMDAGAN
+findstr /C:"const API_MAC_DINH = '';" index.html >nul
+if errorlevel 1 (
+  echo  Trang thai: DA gan san dia chi may chu - khong phai dan link nua.
+) else (
+  echo  Trang thai: CHUA gan dia chi - van phai dan link tay trong app.
+)
+exit /b
+
+:THIEUTEN
 echo.
-echo TREN DIEN THOAI: mo app roi dong han di, mo lai de nhan ban moi.
+echo Chua co kho nao duoc noi va ban cung chua nhap ten tai khoan.
+echo Chay lai va nhap ten tai khoan GitHub.
+echo.
+pause
+exit /b
+
+:CHUALEN
+echo.
+echo ==================================================
+echo    CHUA LEN HET - con !CONLAI! ban va chua day duoc
+echo ==================================================
+echo Chay lai file nay lan nua.
 echo.
 pause
 exit /b
@@ -94,9 +144,9 @@ echo    CHUA DAY LEN DUOC
 echo ==================================================
 echo.
 echo Thuong do 1 trong 3 ly do:
+echo   - Go sai ten tai khoan GitHub
+echo   - Bam Cancel o cua so dang nhap
 echo   - Chua tao kho ten "kho" tren github.com
-echo   - Go sai ten tai khoan (phai dung y het, khong dau)
-echo   - Bam Cancel o cua so dang nhap GitHub
 echo.
 echo Sua xong bam dup file nay chay lai. Chay lai nhieu lan khong sao.
 echo.
