@@ -42,6 +42,7 @@ function khoiTao() {
   Object.keys(COT).forEach(function (ten) {
     var sh = ss.getSheetByName(ten);
     if (!sh) sh = ss.insertSheet(ten);
+    moRongCot_(sh, COT[ten].length);          // trang tính mới chỉ có 26 cột
     if (sh.getLastRow() === 0) {
       sh.getRange(1, 1, 1, COT[ten].length).setValues([COT[ten]]);
       sh.getRange(1, 1, 1, COT[ten].length).setFontWeight('bold').setBackground('#FBF0F2');
@@ -67,7 +68,8 @@ function khoiTao() {
   }
 
   batSaoLuuHangDem();
-  lamDepBang();
+  // Làm đẹp là phần phụ. Nếu nó trục trặc thì cấu trúc dữ liệu vẫn phải nguyên vẹn.
+  try { lamDepBang(); } catch (e) { Logger.log('Bỏ qua phần làm đẹp: ' + e); }
   var tt = ss.getSheetByName('Trang tính1') || ss.getSheetByName('Sheet1');
   if (tt && ss.getSheets().length > 1) { try { ss.deleteSheet(tt); } catch (e) {} }
   ss.setActiveSheet(ss.getSheetByName(SHEET_NHANH));
@@ -379,6 +381,12 @@ function themThuChi_(me, req) {
 
 /* ===================== TIỆN ÍCH ===================== */
 
+/** Trang tính mới chỉ có 26 cột — nới thêm nếu bảng cần nhiều hơn. */
+function moRongCot_(sh, can) {
+  var dangCo = sh.getMaxColumns();
+  if (dangCo < can) sh.insertColumnsAfter(dangCo, can - dangCo);
+}
+
 function sheet_(ten) {
   var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ten);
   if (!sh) throw new Error('Thiếu bảng ' + ten + ' — chạy hàm khoiTao trước.');
@@ -497,6 +505,7 @@ function json_(o) {
    menu  Chỉ Chính Hãng → Nạp hàng vào kho.
    ================================================================= */
 
+var GIOI_HAN_DONG = 400;   // chỉ định dạng chừng này dòng, đủ dùng mà không làm Apps Script nghẽn
 var MAU_DO   = '#D93A55';
 var MAU_HONG = '#FBF0F2';
 var MAU_VIEN = '#EEDAE0';
@@ -520,28 +529,30 @@ function lamDepBang() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
   Object.keys(COT).forEach(function (ten) {
-    var sh = ss.getSheetByName(ten);
-    if (!sh) return;
-    var nCot = COT[ten].length;
-
-    var head = sh.getRange(1, 1, 1, nCot);
-    head.setBackground(MAU_DO).setFontColor('#FFFFFF').setFontWeight('bold')
-        .setVerticalAlignment('middle').setWrap(true);
-    sh.setFrozenRows(1);
-    sh.setRowHeight(1, 34);
-
-    var maxR = Math.max(sh.getMaxRows(), 2);
-    var than = sh.getRange(2, 1, maxR - 1, nCot);
-    than.setVerticalAlignment('middle');
     try {
-      sh.getBandings().forEach(function (b) { b.remove(); });
-      sh.getRange(1, 1, maxR, nCot)
-        .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false);
-      sh.getBandings()[0].setHeaderRowColor(MAU_DO).setFirstRowColor('#FFFFFF').setSecondRowColor(MAU_HONG);
-    } catch (e) {}
+      var sh = ss.getSheetByName(ten);
+      if (!sh) return;
+      var nCot = COT[ten].length;
+      moRongCot_(sh, nCot);
 
-    sh.getRange(1, 1, maxR, nCot).setBorder(true, true, true, true, true, true, MAU_VIEN,
-      SpreadsheetApp.BorderStyle.SOLID);
+      sh.getRange(1, 1, 1, nCot)
+        .setBackground(MAU_DO).setFontColor('#FFFFFF').setFontWeight('bold')
+        .setVerticalAlignment('middle').setWrap(true);
+      sh.setFrozenRows(1);
+      sh.setRowHeight(1, 34);
+
+      // Chỉ tô kẻ so le, không kẻ viền từng ô — kẻ viền cả nghìn dòng làm Apps Script quá tải.
+      try {
+        sh.getBandings().forEach(function (b) { b.remove(); });
+        var nDong = Math.min(sh.getMaxRows(), GIOI_HAN_DONG);
+        sh.getRange(1, 1, nDong, nCot)
+          .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false);
+        var bd = sh.getBandings();
+        if (bd.length) bd[0].setHeaderRowColor(MAU_DO).setFirstRowColor('#FFFFFF').setSecondRowColor(MAU_HONG);
+      } catch (e) {}
+    } catch (e) {
+      Logger.log('Bỏ qua bảng ' + ten + ': ' + e);
+    }
   });
 
   dinhDangCot_(SHEET_SP, { 'Ten': 260, 'Hang': 90, 'Loai': 70, 'Mau': 110, 'ViTri': 150, 'GhiChu': 160, 'MaSP': 130 },
@@ -570,7 +581,7 @@ function dinhDangCot_(ten, rong, cotTien, cotNgay) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(ten);
   if (!sh) return;
-  var cols = COT[ten], maxR = Math.max(sh.getMaxRows(), 2);
+  var cols = COT[ten], maxR = Math.max(Math.min(sh.getMaxRows(), GIOI_HAN_DONG), 2);
 
   Object.keys(rong).forEach(function (k) {
     var i = cols.indexOf(k);
@@ -595,7 +606,7 @@ function chonSan_(ten, cot, ds) {
   if (i < 0) return;
   var rule = SpreadsheetApp.newDataValidation().requireValueInList(ds, true)
     .setAllowInvalid(false).build();
-  sh.getRange(2, i + 1, Math.max(sh.getMaxRows() - 1, 1), 1).setDataValidation(rule);
+  sh.getRange(2, i + 1, Math.max(Math.min(sh.getMaxRows(), GIOI_HAN_DONG) - 1, 1), 1).setDataValidation(rule);
 }
 
 /* ---------------- BẢNG NHẬP NHANH ---------------- */
@@ -606,6 +617,7 @@ function taoBangNhapNhanh_() {
   if (!sh) sh = ss.insertSheet(SHEET_NHANH, 0);
   ss.setActiveSheet(sh); ss.moveActiveSheet(1);
   var cols = COT[SHEET_NHANH];
+  moRongCot_(sh, cols.length);               // 28 cột, trang tính mới chỉ có 26
 
   if (sh.getLastRow() === 0 || String(sh.getRange(1, 1).getValue()) !== cols[0]) {
     sh.getRange(1, 1, 1, cols.length).setValues([cols]);
@@ -640,8 +652,8 @@ function taoBangNhapNhanh_() {
   for (var c = iSize + 1; c <= iFree + 1; c++) sh.setColumnWidth(c, 44);
   sh.setColumnWidth(iKQ + 1, 190);
 
-  var maxR = Math.max(sh.getMaxRows(), 200);
   if (sh.getMaxRows() < 200) sh.insertRowsAfter(sh.getMaxRows(), 200 - sh.getMaxRows());
+  var maxR = Math.min(sh.getMaxRows(), GIOI_HAN_DONG);
 
   sh.getRange(2, 5, maxR - 1, 2).setNumberFormat('#,##0"đ"');
   sh.getRange(2, iSize + 1, maxR - 1, SZ_GIAY_ARR.length + SZ_AO_ARR.length + 1)
@@ -657,9 +669,6 @@ function taoBangNhapNhanh_() {
     .requireValueInList(['Nike', 'Adidas', 'Puma', 'New Balance', 'New Era', 'Khác'], true)
     .setAllowInvalid(true).build();
   sh.getRange(2, 2, maxR - 1, 1).setDataValidation(ruleHang);
-
-  sh.getRange(1, 1, maxR, cols.length)
-    .setBorder(true, true, true, true, true, true, MAU_VIEN, SpreadsheetApp.BorderStyle.SOLID);
 
   // ô hướng dẫn nổi
   var note = sh.getRange(1, 1);
@@ -804,6 +813,8 @@ function xemTonKho() {
     rows.push(r);
   });
 
+  moRongCot_(sh, cot.length);
+  if (sh.getMaxRows() < rows.length) sh.insertRowsAfter(sh.getMaxRows(), rows.length - sh.getMaxRows());
   sh.getRange(1, 1, rows.length, cot.length).setValues(rows);
   sh.getRange(1, 1, 1, cot.length).setBackground(MAU_DO).setFontColor('#FFFFFF')
     .setFontWeight('bold').setHorizontalAlignment('center');
