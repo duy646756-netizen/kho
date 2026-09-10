@@ -29,7 +29,7 @@ COT[SHEET_ND]  = ['TenDangNhap','TenHienThi','MatKhauHash','Salt','VaiTro','Tran
 COT[SHEET_LOG] = ['ThoiGian','NguoiDung','HanhDong','ChiTiet'];
 COT[SHEET_CD]  = ['Khoa','GiaTri'];
 COT[SHEET_NHANH] = ['Tên sản phẩm','Hãng','Loại','Màu','Giá nhập','Giá bán','Vị trí trong kho','Ghi chú']
-  .concat(SZ_GIAY_ARR).concat(SZ_AO_ARR).concat(['Freesize','Kết quả']);
+  .concat(SZ_GIAY_ARR).concat(SZ_AO_ARR).concat(['Freesize','Ảnh (dán link)','Kết quả']);
 
 var SIZE_GIAY = '35,36,37,38,39,40,41,42,43,44,45';
 var SIZE_AO   = 'XS,S,M,L,XL,XXL,3XL';
@@ -73,6 +73,7 @@ function khoiTao() {
   var tt = ss.getSheetByName('Trang tính1') || ss.getSheetByName('Sheet1');
   if (tt && ss.getSheets().length > 1) { try { ss.deleteSheet(tt); } catch (e) {} }
   ss.setActiveSheet(ss.getSheetByName(SHEET_NHANH));
+  try { anBangKyThuat(); } catch (e) {}
   Logger.log('XONG. Tài khoản: chu / 123456 — ĐỔI MẬT KHẨU NGAY bằng hàm doiMatKhauCuaToi.');
 }
 
@@ -177,6 +178,13 @@ function doPost(e) {
       case 'xoaSP':    return json_(xoaSP_(me, req));
       case 'thuchi':   return json_(themThuChi_(me, req));
       case 'doiMK':    return json_(doiMKApp_(me, req));
+      case 'luuAnh':   return json_(luuAnh_(me, req));
+      case 'datTon':   return json_(datTon_(me, req));
+      case 'doiLoai':  return json_(doiLoai_(me, req));
+      case 'dsND':     return json_(dsND_(me));
+      case 'themND':   return json_(themND_(me, req));
+      case 'suaND':    return json_(suaND_(me, req));
+      case 'xoaTC':    return json_(xoaTC_(me, req));
       default:         return json_({ ok: false, loi: 'KHONG_HIEU_LENH' });
     }
   } catch (err) {
@@ -518,6 +526,9 @@ function onOpen() {
     .addItem('🧹  Dọn dòng đã nạp', 'donDongDaNap')
     .addSeparator()
     .addItem('📊  Xem tồn kho tổng hợp', 'xemTonKho')
+    .addSeparator()
+    .addItem('🙈  Giấu bảng kỹ thuật', 'anBangKyThuatVaBao')
+    .addItem('👁  Hiện lại bảng kỹ thuật', 'hienBangKyThuat')
     .addItem('🎨  Làm đẹp lại bảng', 'lamDepBang')
     .addItem('💾  Sao lưu ngay', 'saoLuu')
     .addToUi();
@@ -619,9 +630,10 @@ function taoBangNhapNhanh_() {
   var cols = COT[SHEET_NHANH];
   moRongCot_(sh, cols.length);               // 28 cột, trang tính mới chỉ có 26
 
-  if (sh.getLastRow() === 0 || String(sh.getRange(1, 1).getValue()) !== cols[0]) {
-    sh.getRange(1, 1, 1, cols.length).setValues([cols]);
-  }
+  // Nếu danh sách cột thay đổi (ví dụ thêm cột Ảnh) thì ghi lại hàng tiêu đề.
+  // Chỉ đụng vào hàng 1, dữ liệu bên dưới giữ nguyên.
+  var dangCo = sh.getRange(1, 1, 1, cols.length).getValues()[0].join('|');
+  if (dangCo !== cols.join('|')) sh.getRange(1, 1, 1, cols.length).setValues([cols]);
 
   // Hàng chú thích nhóm size, ngay trên tiêu đề
   sh.setFrozenRows(1);
@@ -639,6 +651,9 @@ function taoBangNhapNhanh_() {
   sh.getRange(1, iSize + 1, 1, SZ_GIAY_ARR.length).setBackground('#08949C');
   sh.getRange(1, iAo + 1, 1, SZ_AO_ARR.length).setBackground('#6C4FD0');
   sh.getRange(1, iFree + 1, 1, 1).setBackground('#B26A0A');
+  var iAnh = cols.indexOf('Ảnh (dán link)');
+  sh.getRange(1, iAnh + 1, 1, 1).setBackground('#08949C');
+  sh.setColumnWidth(iAnh + 1, 210);
   sh.getRange(1, iKQ + 1, 1, 1).setBackground('#4A4E56');
 
   sh.setColumnWidth(1, 250);          // Tên
@@ -680,6 +695,38 @@ function taoBangNhapNhanh_() {
     + '   • Mũ → cột Freesize (cam)\n'
     + '3. Menu "Chỉ Chính Hãng" → "Nạp hàng vào kho"\n\n'
     + 'Ô nào để trống thì bỏ qua. Nạp xong cột Kết quả hiện mã sản phẩm.');
+}
+
+/* ---------------- GIẤU BỚT BẢNG CHO ĐỠ RỐI ---------------- */
+
+var BANG_KY_THUAT = [SHEET_SP, SHEET_TON, SHEET_BAN, SHEET_TC, SHEET_ND, SHEET_LOG, SHEET_CD];
+
+/** Chỉ để lại bảng NhapNhanh. Mấy bảng còn lại là ruột máy, không cần nhìn. */
+function anBangKyThuat() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var n = 0;
+  BANG_KY_THUAT.forEach(function (ten) {
+    var sh = ss.getSheetByName(ten);
+    if (sh && !sh.isSheetHidden()) { try { sh.hideSheet(); n++; } catch (e) {} }
+  });
+  return n;
+}
+
+function hienBangKyThuat() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  BANG_KY_THUAT.forEach(function (ten) {
+    var sh = ss.getSheetByName(ten);
+    if (sh && sh.isSheetHidden()) { try { sh.showSheet(); } catch (e) {} }
+  });
+  SpreadsheetApp.getUi().alert('Đã hiện lại các bảng kỹ thuật.\n\n'
+    + 'Đây là ruột máy — xem thì được, sửa tay dễ làm lệch số. '
+    + 'Muốn giấu lại: menu Chỉ Chính Hãng → Giấu bảng kỹ thuật.');
+}
+
+function anBangKyThuatVaBao() {
+  var n = anBangKyThuat();
+  SpreadsheetApp.getUi().alert(n ? ('Đã giấu ' + n + ' bảng. Giờ chỉ còn bảng NhapNhanh.')
+                                : 'Các bảng kỹ thuật đang được giấu rồi.');
 }
 
 /* ---------------- NẠP HÀNG ---------------- */
@@ -734,8 +781,9 @@ function napHangTuNhapNhanh() {
     var ma = taoMa_({ Hang: hang }, daDung);
     var giaNhap = Number(row[4]) || 0, giaBan = Number(row[5]) || 0;
 
+    var iAnhCot = cols.indexOf('Ảnh (dán link)');
     themSP.push([ma, ten, hang, loai, String(row[3] || ''), giaNhap, giaBan,
-      String(row[6] || ''), '', String(row[7] || ''), 'hien', now]);
+      String(row[6] || ''), String(row[iAnhCot] || '').trim(), String(row[7] || ''), 'hien', now]);
     for (var s in ton) themTon.push([ma, s, ton[s]]);
 
     var tien = giaNhap * tong;
@@ -835,4 +883,145 @@ function xemTonKho() {
     sh.getRange(2, 5, rows.length - 1, 1).setFontWeight('bold');
   }
   ss.setActiveSheet(sh);
+}
+
+/* =================================================================
+   CÁC LỆNH ĐỂ LÀM MỌI THỨ TỪ APP — không cần mở Google Sheet nữa
+   ================================================================= */
+
+/** Lưu ảnh sản phẩm lên Drive, trả về đường dẫn xem ảnh */
+function luuAnh_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var ma = String(req.ma || '').trim();
+  var p = timSP_(ma);
+  if (!p) return { ok: false, loi: 'KHONG_CO_SP' };
+
+  var duLieu = String(req.data || '');
+  if (duLieu.indexOf(',') > -1) duLieu = duLieu.split(',')[1];   // bỏ phần "data:image/jpeg;base64,"
+  if (!duLieu) return { ok: false, loi: 'THIEU_ANH' };
+
+  var thuMuc = layThuMucAnh_();
+  // xoá ảnh cũ của chính mẫu này cho khỏi rác Drive
+  try {
+    var cu = thuMuc.getFilesByName(ma + '.jpg');
+    while (cu.hasNext()) cu.next().setTrashed(true);
+  } catch (e) {}
+
+  var blob = Utilities.newBlob(Utilities.base64Decode(duLieu), req.mime || 'image/jpeg', ma + '.jpg');
+  var f = thuMuc.createFile(blob);
+  f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  var url = 'https://drive.google.com/thumbnail?id=' + f.getId() + '&sz=w600';
+
+  sheet_(SHEET_SP).getRange(p._row, COT[SHEET_SP].indexOf('AnhID') + 1).setValue(url);
+  ghiLog_(me.u, 'luu_anh', ma);
+  return { ok: true, url: url };
+}
+
+function layThuMucAnh_() {
+  var ten = 'Anh san pham Chi Chinh Hang';
+  var it = DriveApp.getFoldersByName(ten);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(ten);
+}
+
+/** Đặt thẳng số lượng cho một size — dùng khi kiểm kê hoặc gõ nhầm */
+function datTon_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { ok: false, loi: 'MAY_CHU_BAN' };
+  try {
+    var ma = String(req.ma), size = String(req.size), sl = Math.max(0, Number(req.sl) || 0);
+    if (!timSP_(ma)) return { ok: false, loi: 'KHONG_CO_SP' };
+    var sh = sheet_(SHEET_TON);
+    var dong = timDongTon_(ma, size);
+    var truoc = dong ? Number(sh.getRange(dong, 3).getValue()) || 0 : 0;
+    if (dong) sh.getRange(dong, 3).setValue(sl);
+    else sh.appendRow([ma, size, sl]);
+    ghiLog_(me.u, 'dat_ton', ma + ' size ' + size + ': ' + truoc + ' → ' + sl);
+    return { ok: true, truoc: truoc, sau: sl };
+  } finally { lock.releaseLock(); }
+}
+
+/** Đổi loại hàng thì bộ size đổi theo — dựng lại bảng tồn cho mẫu đó */
+function doiLoai_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var ma = String(req.ma), loai = String(req.loai);
+  var p = timSP_(ma);
+  if (!p) return { ok: false, loi: 'KHONG_CO_SP' };
+
+  var cd = docCaiDat_();
+  var ds = (loai === 'mu') ? (cd.size_mu || SIZE_MU)
+         : (loai === 'giay' || loai === 'dep') ? (cd.size_giay || SIZE_GIAY)
+         : (cd.size_ao || SIZE_AO);
+  ds = String(ds).split(',');
+
+  var sh = sheet_(SHEET_TON);
+  // xoá từ dưới lên để chỉ số dòng không bị xô
+  var v = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues() : [];
+  for (var i = v.length - 1; i >= 0; i--) if (String(v[i][0]) === ma) sh.deleteRow(i + 2);
+
+  ds.forEach(function (s) { sh.appendRow([ma, String(s).trim(), 0]); });
+  sheet_(SHEET_SP).getRange(p._row, COT[SHEET_SP].indexOf('Loai') + 1).setValue(loai);
+  ghiLog_(me.u, 'doi_loai', ma + ' → ' + loai);
+  return { ok: true };
+}
+
+/* ---------------- TÀI KHOẢN ---------------- */
+
+function dsND_(me) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  return {
+    ok: true,
+    ds: docBang_(SHEET_ND).map(function (u) {
+      return { u: u.TenDangNhap, ten: u.TenHienThi, vaiTro: u.VaiTro, trangThai: u.TrangThai };
+    })
+  };
+}
+
+function themND_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var u = String(req.u || '').trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,20}$/.test(u)) return { ok: false, loi: 'TEN_KHONG_HOP_LE' };
+  if (String(req.mk || '').length < 6) return { ok: false, loi: 'MAT_KHAU_NGAN' };
+  if (timNguoiDung_(u)) return { ok: false, loi: 'TRUNG_TAI_KHOAN' };
+  themNguoiDung(u, String(req.ten || u), String(req.mk), req.vaiTro === 'chu' ? 'chu' : 'nv');
+  ghiLog_(me.u, 'them_nguoi_dung', u);
+  return { ok: true };
+}
+
+function suaND_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var u = timNguoiDung_(String(req.u || ''));
+  if (!u) return { ok: false, loi: 'KHONG_CO_TAI_KHOAN' };
+  var sh = sheet_(SHEET_ND);
+
+  if (req.mkMoi) {
+    if (String(req.mkMoi).length < 6) return { ok: false, loi: 'MAT_KHAU_NGAN' };
+    doiMatKhau(u.TenDangNhap, String(req.mkMoi));
+  }
+  if (req.vaiTro) sh.getRange(u._row, 5).setValue(req.vaiTro === 'chu' ? 'chu' : 'nv');
+  if (req.trangThai) {
+    if (u.TenDangNhap === me.u && req.trangThai === 'khoa')
+      return { ok: false, loi: 'KHONG_TU_KHOA_MINH' };
+    sh.getRange(u._row, 6).setValue(req.trangThai === 'khoa' ? 'khoa' : 'hoat_dong');
+  }
+  ghiLog_(me.u, 'sua_nguoi_dung', u.TenDangNhap);
+  return { ok: true };
+}
+
+/* ---------------- XOÁ KHOẢN THU CHI ---------------- */
+
+function xoaTC_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var ma = String(req.maPhieu || '');
+  var sh = sheet_(SHEET_TC);
+  if (sh.getLastRow() < 2) return { ok: false, loi: 'KHONG_CO_PHIEU' };
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+  for (var i = 0; i < v.length; i++) {
+    if (String(v[i][0]) === ma) {
+      sh.deleteRow(i + 2);
+      ghiLog_(me.u, 'xoa_thu_chi', ma);
+      return { ok: true };
+    }
+  }
+  return { ok: false, loi: 'KHONG_CO_PHIEU' };
 }

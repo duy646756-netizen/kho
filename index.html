@@ -91,6 +91,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .rolebtn .dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}
 .rolebtn[data-role="nv"] .dot{background:var(--ink-3)}
 .rolebtn:hover{color:var(--ink)}
+.anh{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sheet-thumb,.hit .th,.e-anh{position:relative;overflow:hidden}
+.row.bam{cursor:pointer}
+.row.bam:hover{background:var(--panel-2)}
+.mini-btn{flex:none;padding:6px 10px;border:1px solid var(--line);border-radius:4px;
+  font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;font-size:12px;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.mini-btn:hover{border-color:var(--brand);color:var(--brand)}
+.e-anh{aspect-ratio:4/3;border-radius:6px;background:radial-gradient(125% 105% at 50% 16%,var(--tile-a) 0%,var(--tile-b) 100%);
+  display:grid;place-items:center;margin-bottom:10px}
+.e-anh .art{width:70%;height:70%;filter:var(--art-filter)}
+.linkbtn{background:none;border:0;color:var(--brand);font-size:13.5px;text-decoration:underline;
+  text-underline-offset:3px;padding:8px 0;cursor:pointer}
 .sync{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;padding:3px 8px;border-radius:99px;white-space:nowrap}
 .sync.ok{color:var(--thu);background:var(--thu-soft)}
@@ -599,8 +612,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
         <div class="field"><label for="mk-moi">Mật khẩu mới</label><input id="mk-moi" type="password" autocomplete="new-password"></div>
       </div>
       <button class="btn ghost" id="btnDoiMK">Đổi mật khẩu</button>
-      <p class="note">Muốn thêm tài khoản cho người trông quán: mở Apps Script, chạy hàm
-        <b>themNguoiDung</b> với tên đăng nhập, tên hiển thị, mật khẩu và vai trò <b>nv</b>.</p>
+
+      <div id="ndBox">
+        <p class="h2">Người dùng</p>
+        <div class="list" id="ndList"></div>
+        <div style="margin-top:12px"><button class="btn ghost" id="btnThemND">+ Thêm tài khoản</button></div>
+      </div>
+      <p class="note">Mọi thứ làm được ngay trong app. Google Sheet chỉ là nơi cất dữ liệu,
+        bạn không cần mở ra nữa.</p>
     </section>
 
   </div></main>
@@ -635,6 +654,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       <button data-pay="ck" aria-pressed="false">Chuyển khoản</button>
     </div>
     <button class="btn" id="sellBtn" disabled>Chọn size để bán</button>
+    <button class="linkbtn" id="sh-sua" style="display:none;width:100%;text-align:center">Sửa mẫu này</button>
   </div>
 </div>
 
@@ -674,6 +694,62 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
         <select id="c-ht"><option>Tiền mặt</option><option>Chuyển khoản</option></select></div>
     </div>
     <button class="btn" id="cSave">Ghi vào sổ</button>
+  </div>
+</div>
+
+<div class="sheet" id="esheet" role="dialog" aria-modal="true" aria-labelledby="e-title">
+  <div class="grab"></div>
+  <div class="sheet-in">
+    <h3 class="sheet-title" id="e-title" style="margin-bottom:12px">Sửa mẫu</h3>
+
+    <div class="e-anh" id="e-anh"></div>
+    <input type="file" id="e-file" accept="image/*" hidden>
+    <button class="btn ghost" id="e-chonAnh" style="margin-bottom:16px">Chụp ảnh hoặc chọn từ máy</button>
+
+    <div class="field"><label for="e-ten">Tên sản phẩm</label><input id="e-ten"></div>
+    <div class="two">
+      <div class="field"><label for="e-hang">Hãng</label>
+        <select id="e-hang"><option>Nike</option><option>Adidas</option><option>Puma</option><option>New Balance</option><option>New Era</option><option>Khác</option></select></div>
+      <div class="field"><label for="e-loai">Loại hàng</label>
+        <select id="e-loai"><option value="giay">Giày</option><option value="dep">Dép</option><option value="ao">Áo</option><option value="quan">Quần</option><option value="dobo">Đồ bộ</option><option value="mu">Mũ</option></select></div>
+    </div>
+    <input type="hidden" id="e-loaiCu">
+    <div class="two">
+      <div class="field"><label for="e-mau">Màu</label><input id="e-mau"></div>
+      <div class="field"><label for="e-vt">Vị trí trong kho</label><input id="e-vt"></div>
+    </div>
+    <div class="two">
+      <div class="field"><label for="e-nhap">Giá nhập</label><input id="e-nhap" class="num" inputmode="numeric"></div>
+      <div class="field"><label for="e-ban">Giá bán</label><input id="e-ban" class="num" inputmode="numeric"></div>
+    </div>
+
+    <p class="h2">Số lượng thật trong kho</p>
+    <p class="note" style="margin:0 0 10px">Sửa ở đây khi kiểm kê hoặc lúc nhập gõ nhầm. Số bạn đặt là số cuối cùng.</p>
+    <div class="stepgrid" id="e-ton"></div>
+
+    <div style="display:grid;gap:9px;margin-top:20px">
+      <button class="btn" id="e-luu">Lưu thay đổi</button>
+      <button class="linkbtn" id="e-xoa" style="color:var(--ink-3)">Ẩn mẫu này khỏi app</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="usheet" role="dialog" aria-modal="true" aria-labelledby="u-title">
+  <div class="grab"></div>
+  <div class="sheet-in">
+    <h3 class="sheet-title" id="u-title" style="margin-bottom:12px">Thêm tài khoản</h3>
+    <div class="field"><label for="u-ten">Tên đăng nhập</label>
+      <input id="u-ten" placeholder="an" autocapitalize="none" spellcheck="false"></div>
+    <div class="field"><label for="u-hienthi">Tên hiển thị</label>
+      <input id="u-hienthi" placeholder="An trông quán"></div>
+    <div class="two">
+      <div class="field"><label for="u-mk">Mật khẩu</label>
+        <input id="u-mk" type="password" placeholder="ít nhất 6 ký tự"></div>
+      <div class="field"><label for="u-vaitro">Vai trò</label>
+        <select id="u-vaitro"><option value="nv">Nhân viên</option><option value="chu">Chủ shop</option></select></div>
+    </div>
+    <p class="note" style="margin-bottom:14px">Nhân viên tra cứu và bán được, nhưng không thấy giá vốn, không vào được Nhập hàng, Thu chi, Dashboard.</p>
+    <button class="btn" id="uLuu">Tạo tài khoản</button>
   </div>
 </div>
 
@@ -789,6 +865,13 @@ function artSvg(p,cls){
   const ic=icOf(p);
   return '<svg class="'+cls+'" viewBox="0 0 '+vbw(ic)+' '+vb(ic)+'" style="color:'+tintOf(p)+'"><use href="#ic-'+ic+'"></use></svg>';
 }
+/* Có link ảnh thì đè ảnh thật lên hình vẽ. Ảnh hỏng thì tự gỡ, hình vẽ lộ ra. */
+function anhSP(p,cls){
+  const url=String(p.AnhID||'').trim();
+  const nen=artSvg(p,cls);
+  if(!/^https?:\/\//i.test(url))return nen;
+  return nen+'<img class="anh" src="'+url.replace(/"/g,'&quot;')+'" alt="" loading="lazy" onerror="this.remove()">';
+}
 
 /* ================= TRA CỨU ================= */
 function draw(){
@@ -819,7 +902,7 @@ function draw(){
     const du=(con.length?con:sizes).length-show.length;
     return '<button class="card" data-id="'+p.MaSP+'">'
       +'<div class="thumb"><svg class="hexmark" viewBox="0 0 116 100"><use href="#hex-o"></use></svg>'
-      +artSvg(p,'art')+'<span class="badge-brand">'+(p.Hang||'')+'</span>'
+      +anhSP(p,'art')+'<span class="badge-brand">'+(p.Hang||'')+'</span>'
       +(het?'<span class="badge-out">Hết hàng</span>':'')+'</div>'
       +'<div class="card-body"><div class="card-name">'+p.Ten+'</div>'
       +'<div class="card-price num">'+vnd(p.GiaBan)+'</div>'
@@ -845,6 +928,16 @@ function openSheet(ma){
   a.setAttribute('viewBox','0 0 '+vbw(ic)+' '+vb(ic));
   a.style.color=tintOf(cur);
   $('#sh-use').setAttribute('href','#ic-'+ic);
+  const khung=$('.sheet-thumb');
+  khung.querySelectorAll('img.anh').forEach(x=>x.remove());
+  const link=String(cur.AnhID||'').trim();
+  if(/^https?:\/\//i.test(link)){
+    const im=document.createElement('img');
+    im.className='anh'; im.src=link; im.alt='';
+    im.onerror=()=>im.remove();
+    khung.appendChild(im);
+  }
+  $('#sh-sua').style.display=(ME&&ME.vaiTro==='chu')?'':'none';
   comb(); sellState();
   $('#scrim').classList.add('on'); $('#sheet').classList.add('on');
 }
@@ -910,7 +1003,7 @@ $('#shotBtn').onclick=()=>{
   $('#shotBtn').textContent='Chụp lại';
   const hits=DB.sp.slice(0,3).map((p,i)=>({p,pct:[82,64,51][i]}));
   $('#is-results').innerHTML='<div class="h2" style="margin:14px 0 9px">Giống nhất</div>'+hits.map(h=>
-    '<button class="hit" data-id="'+h.p.MaSP+'"><div class="th">'+artSvg(h.p,'')+'</div>'
+    '<button class="hit" data-id="'+h.p.MaSP+'"><div class="th">'+anhSP(h.p,'')+'</div>'
     +'<div class="rl"><div class="rt">'+h.p.Ten+'</div><div class="rs">'+(h.p.ViTri||'')+' · còn '+tot(h.p)+'</div></div>'
     +'<div class="pct num">'+h.pct+'%</div></button>').join('');
   $$('#is-results .hit').forEach(b=>b.onclick=()=>{closeAll();setTimeout(()=>openSheet(b.dataset.id),160)});
@@ -936,13 +1029,15 @@ function veThuChi(){
     if(nhan!==last){html+='<div class="daysep">'+nhan+'</div>';last=nhan}
     const k=r.Loai==='Thu'?'in':'out';
     const gio=new Date(r.ThoiGian).toTimeString().slice(0,5);
-    html+='<div class="row"><div class="tick '+k+'"><svg viewBox="0 0 24 24">'
+    html+='<div class="row'+(ME&&ME.vaiTro==='chu'?' bam':'')+'" data-tc="'+(r.MaPhieu||'')+'"><div class="tick '+k+'"><svg viewBox="0 0 24 24">'
       +(k==='in'?'<path d="M12 19V5M6 11l6-6 6 6"/>':'<path d="M12 5v14M6 13l6 6 6-6"/>')
       +'</svg></div><div class="rl"><div class="rt">'+(r.DanhMuc||'')+(r.NoiDung?' · '+r.NoiDung:'')+'</div>'
       +'<div class="rs">'+gio+' · '+(r.HinhThuc||'')+' · '+(r.NguoiTao||'')+'</div></div>'
       +'<div class="rv num '+k+'">'+(k==='in'?'+':'−')+Number(r.SoTien||0).toLocaleString('vi-VN')+'</div></div>';
   });
   $('#ledger').innerHTML=html;
+  if(ME&&ME.vaiTro==='chu')
+    $$('#ledger .row.bam').forEach(el=>el.onclick=()=>xoaKhoan(el.dataset.tc));
 }
 
 $('#addCash').onclick=()=>{$('#scrim').classList.add('on');$('#csheet').classList.add('on')};
@@ -1196,6 +1291,7 @@ function go(name){
   $('.stage').scrollTop=0;
   if(name==='bao')veDash();
   if(name==='nhap')veDsNhapThem();
+  if(name==='cai')veDsND();
 }
 $$('#nav button').forEach(b=>b.onclick=()=>{
   if(ME&&ME.vaiTro!=='chu'&&b.hasAttribute('data-owner')){toast('Chỉ chủ shop mới xem được mục này');return}
@@ -1257,6 +1353,221 @@ function veTatCa(){
   draw(); veThuChi(); veSync();
   if($('#s-bao').classList.contains('on'))veDash();
 }
+
+
+/* ================= SỬA SẢN PHẨM · ẢNH · TÀI KHOẢN ================= */
+
+let spSua = null, tonSua = {};
+
+/* --- nén ảnh ngay trên máy trước khi gửi --- */
+function nenAnh(file, canh, chatLuong){
+  return new Promise((ok, hong)=>{
+    const fr = new FileReader();
+    fr.onerror = hong;
+    fr.onload = () => {
+      const im = new Image();
+      im.onerror = hong;
+      im.onload = () => {
+        let w = im.width, h = im.height;
+        const ti = Math.min(1, (canh||800) / Math.max(w, h));
+        w = Math.round(w*ti); h = Math.round(h*ti);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
+        ctx.drawImage(im, 0, 0, w, h);
+        ok(c.toDataURL('image/jpeg', chatLuong || 0.72));
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+function moSua(){
+  if(!cur || !ME || ME.vaiTro!=='chu') return;
+  spSua = cur;
+  tonSua = Object.assign({}, cur.ton || {});
+  $('#e-ten').value = cur.Ten || '';
+  $('#e-hang').value = cur.Hang || 'Khác';
+  $('#e-loai').value = cur.Loai || 'giay';
+  $('#e-mau').value = cur.Mau || '';
+  $('#e-vt').value = cur.ViTri || '';
+  $('#e-nhap').value = cur.GiaNhap != null ? cur.GiaNhap : '';
+  $('#e-ban').value = cur.GiaBan != null ? cur.GiaBan : '';
+  $('#e-loaiCu').value = cur.Loai || 'giay';
+  veAnhSua();
+  veTonSua();
+  closeAll();
+  setTimeout(()=>{ $('#scrim').classList.add('on'); $('#esheet').classList.add('on'); }, 180);
+}
+
+function veAnhSua(){
+  const khung = $('#e-anh');
+  khung.querySelectorAll('img,svg').forEach(x=>x.remove());
+  const link = String(spSua.AnhID||'').trim();
+  if(/^https?:\/\//i.test(link)){
+    const im = document.createElement('img');
+    im.className='anh'; im.src=link; im.alt='';
+    im.onerror=()=>{ im.remove(); khung.insertAdjacentHTML('afterbegin', artSvg(spSua,'art')); };
+    khung.appendChild(im);
+  } else {
+    khung.insertAdjacentHTML('afterbegin', artSvg(spSua,'art'));
+  }
+}
+
+function veTonSua(){
+  const keys = Object.keys(tonSua);
+  if(!keys.length){ $('#e-ton').innerHTML='<p class="note">Mẫu này chưa khai size nào.</p>'; return; }
+  $('#e-ton').innerHTML = keys.map(s =>
+    '<div class="step'+(tonSua[s]>0?' has':'')+'"><div class="sz">'+(String(s).length>3?s:'Size '+s)+'</div>'
+    +'<div class="ct"><button data-s="'+s+'" data-d="-1" aria-label="Bớt '+s+'">−</button>'
+    +'<b class="num">'+tonSua[s]+'</b>'
+    +'<button data-s="'+s+'" data-d="1" aria-label="Thêm '+s+'">+</button></div></div>').join('');
+  $$('#e-ton button').forEach(b=>b.onclick=()=>{
+    tonSua[b.dataset.s] = Math.max(0, (Number(tonSua[b.dataset.s])||0) + (+b.dataset.d));
+    veTonSua();
+  });
+}
+
+/* đổi loại thì bộ size khác hẳn — báo trước rồi dựng lại */
+$('#e-loai').onchange = ()=>{
+  const moi = $('#e-loai').value, cu = $('#e-loaiCu').value;
+  if(moi === cu) return;
+  if(!confirm('Đổi loại hàng sẽ xoá hết số lượng đã khai của mẫu này (vì bộ size khác nhau).\n\nCó chắc không?')){
+    $('#e-loai').value = cu; return;
+  }
+  tonSua = {};
+  dsSize(moi).forEach(s=>tonSua[s]=0);
+  veTonSua();
+};
+
+$('#sh-sua').onclick = moSua;
+$('#e-chonAnh').onclick = ()=> $('#e-file').click();
+$('#e-file').onchange = async e=>{
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if(!f) return;
+  if(!navigator.onLine){ toast('Thêm ảnh cần có mạng'); return; }
+  toast('Đang nén ảnh…');
+  try{
+    const data = await nenAnh(f, 800, 0.72);
+    const kb = Math.round(data.length * 0.75 / 1024);
+    const r = await api('luuAnh', { ma: spSua.MaSP, data, mime: 'image/jpeg' }, 60000);
+    if(!r.ok){ toast('Không lưu được ảnh: ' + (r.loi||'')); return; }
+    spSua.AnhID = r.url;
+    const g = DB.sp.find(x=>x.MaSP===spSua.MaSP); if(g) g.AnhID = r.url;
+    luuDB(); veAnhSua(); draw();
+    toast('Đã lưu ảnh · ' + kb + 'KB');
+  }catch(err){ toast('Ảnh không đọc được, thử ảnh khác'); }
+};
+
+$('#e-luu').onclick = async ()=>{
+  if(!spSua) return;
+  const fields = {
+    Ten: $('#e-ten').value.trim(),
+    Hang: $('#e-hang').value,
+    Mau: $('#e-mau').value.trim(),
+    ViTri: $('#e-vt').value.trim(),
+    GiaNhap: Number(String($('#e-nhap').value).replace(/\D/g,''))||0,
+    GiaBan: Number(String($('#e-ban').value).replace(/\D/g,''))||0
+  };
+  if(!fields.Ten){ toast('Tên không được để trống'); return; }
+  const doiLoai = $('#e-loai').value !== $('#e-loaiCu').value;
+
+  // ghi lên máy trước cho nhanh, rồi xếp hàng gửi
+  Object.assign(spSua, fields);
+  if(doiLoai) spSua.Loai = $('#e-loai').value;
+  spSua.ton = Object.assign({}, tonSua);
+  luuDB();
+
+  if(doiLoai) QUEUE.push({action:'doiLoai', body:{ma:spSua.MaSP, loai:$('#e-loai').value}});
+  QUEUE.push({action:'suaSP', body:{ma:spSua.MaSP, fields}});
+  Object.keys(tonSua).forEach(s=>{
+    QUEUE.push({action:'datTon', body:{ma:spSua.MaSP, size:s, sl:tonSua[s]}});
+  });
+  luuQueue();
+  closeAll(); veTatCa(); flush();
+  toast('Đã lưu thay đổi');
+};
+
+$('#e-xoa').onclick = ()=>{
+  if(!spSua) return;
+  if(!confirm('Ẩn mẫu "'+spSua.Ten+'" khỏi app?\n\nDữ liệu bán hàng cũ vẫn giữ nguyên, chỉ là mẫu này không hiện ra nữa.')) return;
+  QUEUE.push({action:'xoaSP', body:{ma:spSua.MaSP}});
+  DB.sp = DB.sp.filter(p=>p.MaSP!==spSua.MaSP);
+  luuDB(); luuQueue();
+  closeAll(); veTatCa(); flush();
+  toast('Đã ẩn mẫu này');
+};
+
+/* ================= XOÁ KHOẢN THU CHI ================= */
+function xoaKhoan(maPhieu){
+  const r = DB.tc.find(x=>x.MaPhieu===maPhieu);
+  if(!r) return;
+  if(r.DanhMuc==='Bán hàng'){
+    toast('Khoản này sinh từ đơn bán, không xoá ở đây được',3600); return;
+  }
+  if(!confirm('Xoá khoản '+r.Loai+' '+vnd(r.SoTien)+'?\n'+(r.NoiDung||''))) return;
+  QUEUE.push({action:'xoaTC', body:{maPhieu}});
+  DB.tc = DB.tc.filter(x=>x.MaPhieu!==maPhieu);
+  luuDB(); luuQueue();
+  veTatCa(); flush();
+  toast('Đã xoá khoản này');
+}
+
+/* ================= TÀI KHOẢN ================= */
+async function veDsND(){
+  if(!ME || ME.vaiTro!=='chu'){ $('#ndBox').style.display='none'; return; }
+  $('#ndBox').style.display='';
+  if(!navigator.onLine){ $('#ndList').innerHTML='<p class="note">Cần có mạng để xem danh sách tài khoản.</p>'; return; }
+  try{
+    const r = await api('dsND');
+    if(!r.ok){ $('#ndList').innerHTML='<p class="note">Không tải được: '+(r.loi||'')+'</p>'; return; }
+    $('#ndList').innerHTML = r.ds.map(u=>
+      '<div class="row"><div class="rl"><div class="rt">'+u.ten+' <span style="color:var(--ink-3);font-weight:400">('+u.u+')</span></div>'
+      +'<div class="rs">'+(u.vaiTro==='chu'?'Chủ shop — toàn quyền':'Nhân viên — bán & tra cứu')
+      +(u.trangThai==='khoa'?' · <b style="color:var(--brand)">ĐANG KHOÁ</b>':'')+'</div></div>'
+      +'<button class="mini-btn" data-u="'+u.u+'" data-act="mk">Đặt lại MK</button>'
+      +'<button class="mini-btn" data-u="'+u.u+'" data-act="khoa">'+(u.trangThai==='khoa'?'Mở khoá':'Khoá')+'</button>'
+      +'</div>').join('');
+    $$('#ndList .mini-btn').forEach(b=>b.onclick=()=>thaoTacND(b.dataset.u, b.dataset.act, r.ds));
+  }catch(e){ $('#ndList').innerHTML='<p class="note">Không nối được máy chủ.</p>'; }
+}
+
+async function thaoTacND(u, act, ds){
+  const t = ds.find(x=>x.u===u);
+  if(act==='mk'){
+    const mk = prompt('Mật khẩu mới cho "'+u+'" (ít nhất 6 ký tự):');
+    if(!mk) return;
+    const r = await api('suaND',{u, mkMoi:mk});
+    toast(r.ok?('Đã đổi mật khẩu cho '+u):('Không đổi được: '+(r.loi||'')));
+  } else {
+    const khoa = t.trangThai!=='khoa';
+    if(!confirm((khoa?'Khoá':'Mở khoá')+' tài khoản "'+u+'"?')) return;
+    const r = await api('suaND',{u, trangThai: khoa?'khoa':'hoat_dong'});
+    toast(r.ok?'Xong':('Không được: '+(r.loi==='KHONG_TU_KHOA_MINH'?'không tự khoá mình được':r.loi)));
+  }
+  veDsND();
+}
+
+$('#btnThemND').onclick = ()=>{ $('#scrim').classList.add('on'); $('#usheet').classList.add('on'); };
+$('#uLuu').onclick = async ()=>{
+  const u = $('#u-ten').value.trim().toLowerCase();
+  const r = await api('themND', {
+    u, ten: $('#u-hienthi').value.trim() || u,
+    mk: $('#u-mk').value, vaiTro: $('#u-vaitro').value
+  });
+  if(!r.ok){
+    const noi = {TEN_KHONG_HOP_LE:'Tên đăng nhập chỉ gồm chữ thường, số, gạch dưới — từ 3 đến 20 ký tự',
+                 MAT_KHAU_NGAN:'Mật khẩu phải từ 6 ký tự', TRUNG_TAI_KHOAN:'Tên đăng nhập này đã có rồi'};
+    toast(noi[r.loi] || ('Không tạo được: '+r.loi), 4000);
+    return;
+  }
+  $('#u-ten').value=''; $('#u-hienthi').value=''; $('#u-mk').value='';
+  closeAll(); veDsND();
+  toast('Đã tạo tài khoản '+u);
+};
 
 /* ================= KHỞI ĐỘNG ================= */
 (function(){
