@@ -113,6 +113,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #x-body{font-size:14.5px;line-height:1.6;color:var(--ink-2);margin:0 0 20px}
 #x-body b{color:var(--ink)}
 .xnut{display:grid;gap:9px}
+.btn.nguyhiem{background:transparent;border:1.5px solid var(--brand);color:var(--brand);font-size:16px}
+.btn.nguyhiem:hover{background:var(--brand);color:var(--on-brand)}
 /* ----- giỏ hàng ----- */
 #thanhGio{position:fixed;left:50%;transform:translate(-50%,140%);bottom:74px;z-index:30;
   width:min(560px,calc(100vw - 24px));display:flex;align-items:center;gap:12px;
@@ -891,7 +893,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
     <div style="display:grid;gap:9px;margin-top:20px">
       <button class="btn" id="e-luu">Lưu thay đổi</button>
-      <button class="linkbtn" id="e-xoa" style="color:var(--ink-3)">Ẩn mẫu này khỏi app</button>
+      <button class="btn nguyhiem" id="e-xoa">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Xoá mẫu này
+      </button>
     </div>
   </div>
 </div>
@@ -994,7 +999,7 @@ const TINT={giay:'#6E7278',dep:'#4A4E56',ao:'#5A5F68',quan:'#4A4E56',dobo:'#3E43
 
 /* Địa chỉ máy chủ gắn sẵn — file DAY-LEN-GITHUB.bat sẽ điền vào dòng dưới đây,
    nhờ vậy không máy nào phải dán link nữa. */
-const API_MAC_DINH = 'https://script.google.com/macros/s/AKfycby5mzPf7J10iaDxyih7OUxg1np8vUhSnC35ecGyk01s0JHIA1wZ4yh9atQGzrN_eA2gTQ/exec'; /* DIA-CHI-MAY-CHU */
+const API_MAC_DINH = ''; /* DIA-CHI-MAY-CHU */
 let API   = LS.getItem('cch_api') || API_MAC_DINH || '';
 let TOKEN = LS.getItem('cch_token') || '';
 let ME    = JSON.parse(LS.getItem('cch_me')   || 'null');
@@ -1916,15 +1921,16 @@ $('#e-luu').onclick = async ()=>{
 
 $('#e-xoa').onclick = async ()=>{
   if(!spSua) return;
-  const co = await hoiXacNhan('Ẩn mẫu này khỏi app?',
-    '<b>'+spSua.Ten+'</b><br><br>Mẫu này sẽ không hiện ra khi tra cứu nữa.<br>'
-    +'Lịch sử bán hàng cũ <b>vẫn giữ nguyên</b>.', 'Ẩn mẫu này');
+  const co = await hoiXacNhan('Xoá mẫu này?',
+    '<b>'+spSua.Ten+'</b><br><br>Mẫu này sẽ <b>biến mất khỏi app</b>, không tra cứu và không bán được nữa.'
+    +'<br><br>Doanh thu và lịch sử bán hàng cũ <b>vẫn giữ nguyên</b> để sổ sách không sai. '
+    +'Dòng của nó vẫn nằm trong Google Sheet, cần thì lấy lại được.', 'Xoá mẫu này');
   if(!co) return;
   QUEUE.push({action:'xoaSP', body:{ma:spSua.MaSP}});
   DB.sp = DB.sp.filter(p=>p.MaSP!==spSua.MaSP);
   luuDB(); luuQueue();
   closeAll(); veTatCa(); flush();
-  toast('Đã ẩn mẫu này');
+  toast('Đã xoá mẫu này khỏi app');
 };
 
 /* ================= XOÁ KHOẢN THU CHI ================= */
