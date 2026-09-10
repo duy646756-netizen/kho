@@ -162,6 +162,23 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   letter-spacing:.1em;text-transform:uppercase}
 .hdcong .v{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:30px;font-weight:700;color:var(--brand)}
 .hdchan{text-align:center;font-size:12.5px;color:var(--ink-3);margin-top:14px;line-height:1.6}
+/* ----- mã QR chuyển khoản ----- */
+#qrAnh{background:#fff;border-radius:12px;padding:10px;display:grid;place-items:center;
+  min-height:240px;margin-bottom:14px;border:1px solid var(--line)}
+#qrAnh img{width:100%;max-width:280px;height:auto;display:block}
+#qrAnh.hong{background:var(--warn-soft);border-color:var(--warn)}
+.qrdang{text-align:center;color:var(--ink-3);font-size:13.5px;line-height:1.6;padding:40px 12px}
+.qrdang span{font-size:12.5px}
+.qrtien{text-align:center;font-family:'Roboto Condensed',Roboto,sans-serif;font-size:34px;
+  font-weight:700;color:var(--brand);line-height:1;margin-bottom:4px}
+.qrnhac{text-align:center;font-size:12.5px;color:var(--ink-3);margin:0 0 14px}
+.qrbang{background:var(--panel-2);border-radius:8px;padding:12px 14px;margin-bottom:16px}
+.qrbang div{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13.5px}
+.qrbang .k{color:var(--ink-3);flex:none}
+.qrbang .v{font-weight:500;text-align:right;word-break:break-all}
+.qrthu{background:#fff;border-radius:10px;padding:10px;display:grid;place-items:center;
+  border:1px solid var(--line);margin-top:6px}
+.qrthu img{width:200px;height:auto;display:block}
 /* ----- màn hình nhập hàng cho điện thoại ----- */
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--panel-2);border-radius:8px;padding:4px;margin-bottom:18px}
 .seg button{padding:11px 8px;border-radius:6px;font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;
@@ -738,6 +755,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       </div>
       <button class="btn ghost" id="btnDoiMK">Đổi mật khẩu</button>
 
+      <p class="h2">Tài khoản nhận tiền</p>
+      <p class="note" style="margin:0 0 12px">Khai một lần. Sau đó khách chọn Chuyển khoản là app hiện mã QR
+        có sẵn số tiền và nội dung, khách quét là xong.</p>
+      <div class="field"><label for="nh-bin">Ngân hàng</label><select id="nh-bin"></select></div>
+      <div class="two">
+        <div class="field"><label for="nh-stk">Số tài khoản</label>
+          <input id="nh-stk" inputmode="numeric" autocomplete="off" spellcheck="false"></div>
+        <div class="field"><label for="nh-chu">Tên chủ tài khoản</label>
+          <input id="nh-chu" placeholder="NGUYEN VAN A" autocapitalize="characters"></div>
+      </div>
+      <div id="nh-thu" style="margin-bottom:14px"></div>
+      <button class="btn ghost" id="nh-luu" style="margin-bottom:6px">Lưu tài khoản nhận tiền</button>
+
       <div id="ndBox">
         <p class="h2">Người dùng</p>
         <div class="list" id="ndList"></div>
@@ -926,6 +956,25 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     <p class="hdchan">Thanh toán: <b id="hdHt">Tiền mặt</b><br>Cảm ơn quý khách · Hẹn gặp lại</p>
     <button class="btn" id="hdXong" style="margin-top:16px">Xong</button>
     <p class="note" style="text-align:center">Muốn gửi khách thì chụp màn hình này.</p>
+  </div>
+</div>
+
+<div class="sheet" id="qsheet" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+  <div class="grab"></div>
+  <div class="sheet-in">
+    <h3 class="sheet-title" id="qr-title" style="margin-bottom:10px">Khách quét mã để chuyển</h3>
+    <div class="qrtien num" id="qrTien">0đ</div>
+    <p class="qrnhac">Mã đã có sẵn số tiền và nội dung — khách không phải gõ gì</p>
+    <div id="qrAnh"></div>
+    <div class="qrbang">
+      <div><span class="k">Ngân hàng</span><span class="v" id="qrNH"></span></div>
+      <div><span class="k">Số tài khoản</span><span class="v num" id="qrStk"></span></div>
+      <div><span class="k">Chủ tài khoản</span><span class="v" id="qrChu"></span></div>
+      <div><span class="k">Nội dung</span><span class="v" id="qrNd"></span></div>
+    </div>
+    <button class="btn" id="qrXong">Khách chuyển xong — chốt đơn</button>
+    <button class="btn ghost" id="qrHuy" style="margin-top:9px">Quay lại giỏ hàng</button>
+    <p class="note" style="text-align:center">Chỉ bấm chốt đơn khi <b>điện thoại bạn đã báo tiền về</b>.</p>
   </div>
 </div>
 
@@ -1660,7 +1709,7 @@ function go(name){
   $('.stage').scrollTop=0;
   if(name==='bao')veDash();
   if(name==='nhap'&&impMode==='them')veDsNhapThem();
-  if(name==='cai')veDsND();
+  if(name==='cai'){veDsND();veCaiDatNH();}
 }
 $$('#nav button').forEach(b=>b.onclick=()=>{
   if(ME&&ME.vaiTro!=='chu'&&b.hasAttribute('data-owner')){toast('Chỉ chủ shop mới xem được mục này');return}
@@ -2068,6 +2117,21 @@ $('#gThanhToan').onclick = () => {
   const luc = new Date();
   const bill = { luc, ht, dong: GIO.map(x => Object.assign({}, x)), tong: tongGio(), nguoi: ME ? ME.ten : '' };
 
+  /* Chuyển khoản: hiện mã QR cho khách quét TRƯỚC, chốt đơn sau khi tiền về.
+     Chưa khai tài khoản thì vẫn chốt như cũ, chỉ nhắc một câu. */
+  if(ht === 'Chuyển khoản'){
+    if(daKhaiNH()){ moQR(bill); return; }
+    toast('Chưa khai tài khoản nhận tiền — vào Cài đặt để hiện mã QR', 4600);
+  }
+  chotDon(bill);
+};
+
+/* Chốt đơn: trừ kho, ghi sổ, in hoá đơn */
+function chotDon(bill){
+  const ht = bill.ht;
+  const luc = bill.luc;
+  GIO = bill.dong.map(x => Object.assign({}, x));
+
   GIO.forEach(x => {
     const p = DB.sp.find(s => s.MaSP === x.ma);
     for(let i = 0; i < x.sl; i++){
@@ -2085,7 +2149,7 @@ $('#gThanhToan').onclick = () => {
   GIO = []; luuGio(); luuDB(); luuQueue();
   closeAll(); veTatCa(); flush();
   setTimeout(() => moHoaDon(bill), 200);
-};
+}
 
 /* --- hoá đơn cho khách xem --- */
 function moHoaDon(b){
@@ -2097,7 +2161,7 @@ function moHoaDon(b){
     + '<div class="hdsize">Size ' + x.size + ' · ' + vnd(x.gia) + (x.sl>1 ? ' × ' + x.sl : '') + '</div></div>'
     + '<div class="num hdtien">' + vnd(x.gia * x.sl) + '</div></div>').join('');
   $('#hdTong').textContent = vnd(b.tong);
-  $('#hdHt').textContent = b.ht;
+  $('#hdHt').textContent = b.ht + (b.noiDung ? ' · ' + b.noiDung : '');
   $('#scrim').classList.add('on'); $('#hsheet').classList.add('on');
 }
 $('#hdXong').onclick = () => closeAll();
@@ -2105,6 +2169,119 @@ $('#hdXong').onclick = () => closeAll();
 $('#thanhGio').onclick = moGio;
 $$('#gPay button').forEach(b => b.onclick = () =>
   $$('#gPay button').forEach(x => x.setAttribute('aria-pressed', String(x === b))));
+
+
+/* ================= MÃ QR CHUYỂN KHOẢN (VietQR) ================= */
+
+/* Mã ngân hàng theo chuẩn NAPAS. Sai mã là tiền bay sang ngân hàng khác,
+   nên trong Cài đặt có nút thử QR để bạn tự quét kiểm tra trước. */
+const NGAN_HANG = [
+  ['970436','Vietcombank'], ['970415','VietinBank'], ['970418','BIDV'], ['970405','Agribank'],
+  ['970407','Techcombank'], ['970422','MB Bank'], ['970416','ACB'], ['970432','VPBank'],
+  ['970423','TPBank'], ['970403','Sacombank'], ['970437','HDBank'], ['970441','VIB'],
+  ['970443','SHB'], ['970426','MSB'], ['970448','OCB'], ['970431','Eximbank'],
+  ['970440','SeABank'], ['970449','LPBank'], ['970428','Nam A Bank'], ['970412','PVcomBank'],
+  ['970425','ABBANK'], ['970427','VietABank'], ['970400','Saigonbank'], ['970452','KienlongBank'],
+  ['970419','NCB'], ['970433','VietBank'], ['546034','Cake by VPBank'], ['963388','Timo']
+];
+
+let khoBill = null;   // đơn đang chờ khách chuyển khoản
+
+const cauHinhNH = () => ({
+  bin:  (DB.cd && DB.cd.nh_bin)  || '',
+  ten:  (DB.cd && DB.cd.nh_ten)  || '',
+  stk:  (DB.cd && DB.cd.stk)     || '',
+  chu:  (DB.cd && DB.cd.chu_tk)  || ''
+});
+const daKhaiNH = () => { const c = cauHinhNH(); return !!(c.bin && c.stk); };
+
+/* Nội dung chuyển khoản: ngắn, không dấu, để đối chiếu sổ sách */
+function noiDungCK(luc){
+  const p = n => ('0' + n).slice(-2);
+  return 'CCH ' + p(luc.getDate()) + p(luc.getMonth() + 1) + ' ' + p(luc.getHours()) + p(luc.getMinutes()) + p(luc.getSeconds());
+}
+
+function linkQR(soTien, noiDung, kieu){
+  const c = cauHinhNH();
+  return 'https://img.vietqr.io/image/' + c.bin + '-' + encodeURIComponent(c.stk)
+    + '-' + (kieu || 'compact2') + '.png'
+    + '?amount=' + Math.round(soTien)
+    + '&addInfo=' + encodeURIComponent(noiDung)
+    + (c.chu ? '&accountName=' + encodeURIComponent(c.chu) : '');
+}
+
+/* --- màn hình QR cho khách quét --- */
+function moQR(bill){
+  khoBill = bill;
+  const c = cauHinhNH();
+  const nd = noiDungCK(bill.luc);
+  bill.noiDung = nd;
+
+  $('#qrTien').textContent = vnd(bill.tong);
+  $('#qrNH').textContent   = c.ten || '—';
+  $('#qrStk').textContent  = c.stk || '—';
+  $('#qrChu').textContent  = c.chu || '—';
+  $('#qrNd').textContent   = nd;
+
+  const anh = $('#qrAnh');
+  anh.classList.remove('hong');
+  anh.innerHTML = '<div class="qrdang">Đang tạo mã…</div>';
+  const im = new Image();
+  im.alt = 'Mã QR chuyển khoản ' + vnd(bill.tong);
+  im.onload  = () => { anh.innerHTML = ''; anh.appendChild(im); };
+  im.onerror = () => {
+    anh.classList.add('hong');
+    anh.innerHTML = '<div class="qrdang">Không tạo được mã QR<br><span>Mất mạng — đọc số tài khoản bên dưới cho khách</span></div>';
+  };
+  im.src = linkQR(bill.tong, nd);
+
+  closeAll();
+  setTimeout(() => { $('#scrim').classList.add('on'); $('#qsheet').classList.add('on'); }, 160);
+}
+
+$('#qrXong').onclick = () => {
+  if(!khoBill) return;
+  const b = khoBill; khoBill = null;
+  chotDon(b);
+};
+$('#qrHuy').onclick = () => { khoBill = null; closeAll(); toast('Chưa thanh toán — giỏ hàng vẫn còn'); };
+
+/* --- khai tài khoản nhận tiền --- */
+function veCaiDatNH(){
+  const c = cauHinhNH();
+  const sel = $('#nh-bin');
+  sel.innerHTML = '<option value="">— Chọn ngân hàng —</option>'
+    + NGAN_HANG.map(x => '<option value="' + x[0] + '"' + (x[0] === c.bin ? ' selected' : '') + '>' + x[1] + '</option>').join('');
+  $('#nh-stk').value = c.stk;
+  $('#nh-chu').value = c.chu;
+  veThuQR();
+}
+
+function veThuQR(){
+  const bin = $('#nh-bin').value, stk = $('#nh-stk').value.trim();
+  const hop = $('#nh-thu');
+  if(!bin || !stk){ hop.innerHTML = '<p class="note">Điền đủ ngân hàng và số tài khoản để xem thử mã QR.</p>'; return; }
+  const c = { bin, stk, chu: $('#nh-chu').value.trim(), ten: '' };
+  const url = 'https://img.vietqr.io/image/' + bin + '-' + encodeURIComponent(stk) + '-compact2.png'
+    + '?amount=10000&addInfo=' + encodeURIComponent('CCH THU') + (c.chu ? '&accountName=' + encodeURIComponent(c.chu) : '');
+  hop.innerHTML = '<p class="note" style="margin-bottom:8px"><b>Quét thử bằng app ngân hàng của chính bạn</b> — '
+    + 'phải hiện đúng tên bạn và số tiền 10.000đ thì mới đúng. Đừng bấm chuyển.</p>'
+    + '<div class="qrthu"><img src="' + url + '" alt="Mã QR thử"></div>';
+}
+
+$('#nh-bin').onchange = veThuQR;
+$('#nh-stk').oninput  = veThuQR;
+$('#nh-chu').oninput  = veThuQR;
+
+$('#nh-luu').onclick = async () => {
+  const bin = $('#nh-bin').value, stk = $('#nh-stk').value.trim(), chu = $('#nh-chu').value.trim();
+  if(!bin || !stk){ toast('Chưa chọn ngân hàng hoặc chưa nhập số tài khoản'); return; }
+  const ten = (NGAN_HANG.find(x => x[0] === bin) || ['',''])[1];
+  const cd = { nh_bin: bin, nh_ten: ten, stk, chu_tk: chu };
+  DB.cd = Object.assign({}, DB.cd, cd); luuDB();
+  QUEUE.push({ action: 'luuCaiDat', body: { cd } }); luuQueue(); flush();
+  toast('Đã lưu tài khoản nhận tiền');
+};
 
 /* ================= KHỞI ĐỘNG ================= */
 (function(){

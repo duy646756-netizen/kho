@@ -186,6 +186,7 @@ function doPost(e) {
       case 'suaND':    return json_(suaND_(me, req));
       case 'xoaTC':    return json_(xoaTC_(me, req));
       case 'huyBan':   return json_(huyBan_(me, req));
+      case 'luuCaiDat':return json_(luuCaiDat_(me, req));
       default:         return json_({ ok: false, loi: 'KHONG_HIEU_LENH' });
     }
   } catch (err) {
@@ -1089,4 +1090,21 @@ function huyBan_(me, req) {
     ghiLog_(me.u, 'huy_ban', maGD + ' · ' + ten + ' size ' + size + ' × ' + sl + ' — da cong tra kho');
     return { ok: true, ma: ma, size: size, sl: sl };
   } finally { lock.releaseLock(); }
+}
+
+
+/** Lưu cài đặt (tài khoản nhận tiền...) vào bảng CaiDat */
+function luuCaiDat_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var cd = req.cd || {};
+  var sh = sheet_(SHEET_CD);
+  var dang = docBang_(SHEET_CD);
+  Object.keys(cd).forEach(function (k) {
+    var cu = null;
+    for (var i = 0; i < dang.length; i++) if (String(dang[i].Khoa) === k) { cu = dang[i]; break; }
+    if (cu) sh.getRange(cu._row, 2).setValue(String(cd[k]));
+    else sh.appendRow([k, String(cd[k])]);
+  });
+  ghiLog_(me.u, 'luu_cai_dat', Object.keys(cd).join(','));
+  return { ok: true };
 }
