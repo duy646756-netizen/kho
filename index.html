@@ -2195,10 +2195,33 @@ const cauHinhNH = () => ({
 });
 const daKhaiNH = () => { const c = cauHinhNH(); return !!(c.bin && c.stk); };
 
-/* Nội dung chuyển khoản: ngắn, không dấu, để đối chiếu sổ sách */
-function noiDungCK(luc){
-  const p = n => ('0' + n).slice(-2);
-  return 'CCH ' + p(luc.getDate()) + p(luc.getMonth() + 1) + ' ' + p(luc.getHours()) + p(luc.getMinutes()) + p(luc.getSeconds());
+/* Bỏ dấu nhưng GIỮ hoa thường — ngân hàng hay làm hỏng chữ có dấu */
+const khongDau = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+
+/* Một dòng hàng gọn lại: "Nike Air Force 1 s41" hoặc "Ao thun Nike sL x2" */
+function monGon(x, dai){
+  let t = khongDau(x.ten).replace(/[^A-Za-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  if(t.length > (dai || 20)){
+    t = t.slice(0, dai || 20);
+    if(t.lastIndexOf(' ') > 8) t = t.slice(0, t.lastIndexOf(' '));
+  }
+  const sz = khongDau(x.size);
+  const phanSize = sz.toLowerCase() === 'freesize' ? '' : ' s' + sz;
+  return t + phanSize + (x.sl > 1 ? ' x' + x.sl : '');
+}
+
+/* Nội dung chuyển khoản = tên món khách mua + số lượng.
+   Ngân hàng cắt nội dung dài, nên giữ dưới 48 ký tự và bỏ hết dấu. */
+function noiDungCK(bill){
+  const ds = bill.dong.map(x => monGon(x));
+  let nd = ds.join(' + ');
+  if(nd.length > 48){
+    const conLai = bill.dong.slice(1).reduce((a, x) => a + x.sl, 0);
+    nd = monGon(bill.dong[0], 24) + (conLai ? ' +' + conLai + ' mon' : '');
+  }
+  if(nd.length > 48) nd = nd.slice(0, 48).trim();
+  return nd || 'Mua hang';
 }
 
 function linkQR(soTien, noiDung, kieu){
@@ -2214,7 +2237,7 @@ function linkQR(soTien, noiDung, kieu){
 function moQR(bill){
   khoBill = bill;
   const c = cauHinhNH();
-  const nd = noiDungCK(bill.luc);
+  const nd = noiDungCK(bill);
   bill.noiDung = nd;
 
   $('#qrTien').textContent = vnd(bill.tong);
