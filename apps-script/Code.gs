@@ -185,6 +185,7 @@ function doPost(e) {
       case 'themND':   return json_(themND_(me, req));
       case 'suaND':    return json_(suaND_(me, req));
       case 'xoaTC':    return json_(xoaTC_(me, req));
+      case 'huyBan':   return json_(huyBan_(me, req));
       default:         return json_({ ok: false, loi: 'KHONG_HIEU_LENH' });
     }
   } catch (err) {
@@ -1040,4 +1041,52 @@ function xoaTC_(me, req) {
     }
   }
   return { ok: false, loi: 'KHONG_CO_PHIEU' };
+}
+
+
+/** Huỷ một đơn đã bán: cộng trả hàng về kho, xoá đơn và xoá khoản Thu kèm theo */
+function huyBan_(me, req) {
+  if (me.vaiTro !== 'chu') return { ok: false, loi: 'KHONG_CO_QUYEN' };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { ok: false, loi: 'MAY_CHU_BAN' };
+  try {
+    var maGD = String(req.maGD || '');
+    var shB = sheet_(SHEET_BAN);
+    if (shB.getLastRow() < 2) return { ok: false, loi: 'KHONG_CO_DON' };
+
+    var cols = COT[SHEET_BAN];
+    var v = shB.getRange(2, 1, shB.getLastRow() - 1, cols.length).getValues();
+    var dongDon = 0, ma = '', size = '', sl = 0, ten = '';
+    for (var i = 0; i < v.length; i++) {
+      if (String(v[i][cols.indexOf('MaGD')]) === maGD) {
+        dongDon = i + 2;
+        ma   = String(v[i][cols.indexOf('MaSP')]);
+        size = String(v[i][cols.indexOf('Size')]);
+        sl   = Number(v[i][cols.indexOf('SoLuong')]) || 0;
+        ten  = String(v[i][cols.indexOf('Ten')]);
+        break;
+      }
+    }
+    if (!dongDon) return { ok: false, loi: 'KHONG_CO_DON' };
+
+    // cộng trả hàng về kho
+    var shT = sheet_(SHEET_TON);
+    var dongTon = timDongTon_(ma, size);
+    if (dongTon) shT.getRange(dongTon, 3).setValue((Number(shT.getRange(dongTon, 3).getValue()) || 0) + sl);
+    else shT.appendRow([ma, size, sl]);
+
+    // xoá khoản Thu sinh ra từ đơn này
+    var shC = sheet_(SHEET_TC);
+    if (shC.getLastRow() > 1) {
+      var cc = COT[SHEET_TC];
+      var w = shC.getRange(2, 1, shC.getLastRow() - 1, cc.length).getValues();
+      for (var j = w.length - 1; j >= 0; j--) {
+        if (String(w[j][cc.indexOf('MaLienKet')]) === maGD) shC.deleteRow(j + 2);
+      }
+    }
+
+    shB.deleteRow(dongDon);
+    ghiLog_(me.u, 'huy_ban', maGD + ' · ' + ten + ' size ' + size + ' × ' + sl + ' — da cong tra kho');
+    return { ok: true, ma: ma, size: size, sl: sl };
+  } finally { lock.releaseLock(); }
 }

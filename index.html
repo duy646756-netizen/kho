@@ -104,6 +104,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .e-anh .art{width:70%;height:70%;filter:var(--art-filter)}
 .linkbtn{background:none;border:0;color:var(--brand);font-size:13.5px;text-decoration:underline;
   text-underline-offset:3px;padding:8px 0;cursor:pointer}
+.thungrac{flex:none;width:40px;height:40px;border-radius:8px;display:grid;place-items:center;
+  color:var(--ink-3);background:transparent;border:1px solid transparent}
+.thungrac svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+.thungrac:hover{color:var(--brand);background:var(--brand-soft);border-color:var(--brand-line)}
+.thungrac:active{transform:scale(.92)}
+#x-body{font-size:14.5px;line-height:1.6;color:var(--ink-2);margin:0 0 20px}
+#x-body b{color:var(--ink)}
+.xnut{display:grid;gap:9px}
 /* ----- màn hình nhập hàng cho điện thoại ----- */
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--panel-2);border-radius:8px;padding:4px;margin-bottom:18px}
 .seg button{padding:11px 8px;border-radius:6px;font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;
@@ -820,6 +829,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   </div>
 </div>
 
+<div class="sheet" id="xsheet" role="alertdialog" aria-modal="true" aria-labelledby="x-title">
+  <div class="grab"></div>
+  <div class="sheet-in">
+    <h3 class="sheet-title" id="x-title" style="margin-bottom:12px">Xác nhận</h3>
+    <p id="x-body"></p>
+    <div class="xnut">
+      <button class="btn" id="x-ok">Xoá</button>
+      <button class="btn ghost" id="x-huy">Thôi, để nguyên</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -836,7 +857,7 @@ const TINT={giay:'#6E7278',dep:'#4A4E56',ao:'#5A5F68',quan:'#4A4E56',dobo:'#3E43
 
 /* Địa chỉ máy chủ gắn sẵn — file DAY-LEN-GITHUB.bat sẽ điền vào dòng dưới đây,
    nhờ vậy không máy nào phải dán link nữa. */
-const API_MAC_DINH = 'https://script.google.com/macros/s/AKfycby5mzPf7J10iaDxyih7OUxg1np8vUhSnC35ecGyk01s0JHIA1wZ4yh9atQGzrN_eA2gTQ/exec'; /* DIA-CHI-MAY-CHU */
+const API_MAC_DINH = ''; /* DIA-CHI-MAY-CHU */
 let API   = LS.getItem('cch_api') || API_MAC_DINH || '';
 let TOKEN = LS.getItem('cch_token') || '';
 let ME    = JSON.parse(LS.getItem('cch_me')   || 'null');
@@ -847,6 +868,23 @@ let cat='all', cur=null, curSize=null, dangGui=false;
 
 const luuDB   =()=>LS.setItem('cch_db',JSON.stringify(DB));
 const luuQueue=()=>{LS.setItem('cch_queue',JSON.stringify(QUEUE));veSync()};
+
+/* Hộp thoại xác nhận, dùng chung cho mọi thao tác xoá. Trả về Promise. */
+let _traLoi=null;
+function hoiXacNhan(tieuDe, noiDung, nhanNut, nguyHiem){
+  $('#x-title').textContent=tieuDe;
+  $('#x-body').innerHTML=noiDung;
+  const nut=$('#x-ok');
+  nut.textContent=nhanNut||'Xoá';
+  nut.className='btn'+(nguyHiem===false?' ghost':'');
+  $('#scrim').classList.add('on'); $('#xsheet').classList.add('on');
+  return new Promise(ok=>{ _traLoi=ok; });
+}
+function _dongHoi(kq){
+  $('#xsheet').classList.remove('on');
+  if(!$$('.sheet.on').length) $('#scrim').classList.remove('on');
+  if(_traLoi){ const f=_traLoi; _traLoi=null; f(kq); }
+}
 
 function toast(m,lau){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('on'),lau||2600)}
 
@@ -880,7 +918,7 @@ function veSync(){
 async function flush(){
   if(dangGui||!QUEUE.length||!navigator.onLine||!TOKEN)return;
   dangGui=true;
-  let daGui=false;
+  let daGui=false, canTaiLai=false;
   try{
     while(QUEUE.length){
       const job=QUEUE[0];
@@ -894,14 +932,23 @@ async function flush(){
         toast('Có người bán mất món này trước rồi — đang tải lại tồn kho',4200);
         await pull(); continue;
       }
-      // lỗi khác: bỏ ra khỏi hàng đợi để không kẹt mãi, báo cho người dùng
+      // Lỗi khác: bỏ khỏi hàng đợi để không kẹt mãi, BÁO RÕ, và tải lại ngay —
+      // nếu không, máy vẫn giữ thay đổi mà Google đã từ chối, màn hình sẽ nói dối.
       QUEUE.shift(); luuQueue();
-      toast('Một thao tác không gửi được: '+((res&&res.loi)||'lỗi lạ'),4200);
+      const noi = {
+        KHONG_HIEU_LENH:'Máy chủ chưa cập nhật — vào Apps Script bấm Triển khai lại',
+        KHONG_CO_QUYEN :'Tài khoản này không có quyền làm việc đó',
+        KHONG_CO_SP    :'Mẫu này không còn trên máy chủ',
+        KHONG_CO_DON   :'Đơn bán này không còn nữa',
+        MAY_CHU_BAN    :'Máy chủ đang bận, thử lại sau'
+      }[res&&res.loi] || ('Máy chủ báo lỗi: '+((res&&res.loi)||'lạ'));
+      toast('Không gửi được — '+noi, 5200);
+      canTaiLai = true;
     }
   } finally { dangGui=false; veSync() }
   // Gửi xong thì lấy lại bản chính từ Google: mã sản phẩm tạm được thay bằng mã thật,
   // đồng thời thấy luôn thay đổi của người kia.
-  if(daGui && !QUEUE.length) await pull();
+  if((daGui || canTaiLai) && !QUEUE.length) await pull();
 }
 
 async function pull(){
@@ -1099,15 +1146,22 @@ function veThuChi(){
     if(nhan!==last){html+='<div class="daysep">'+nhan+'</div>';last=nhan}
     const k=r.Loai==='Thu'?'in':'out';
     const gio=new Date(r.ThoiGian).toTimeString().slice(0,5);
-    html+='<div class="row'+(ME&&ME.vaiTro==='chu'?' bam':'')+'" data-tc="'+(r.MaPhieu||'')+'"><div class="tick '+k+'"><svg viewBox="0 0 24 24">'
+    const laDonBan = r.DanhMuc==='Bán hàng';
+    html+='<div class="row" data-tc="'+(r.MaPhieu||'')+'"><div class="tick '+k+'"><svg viewBox="0 0 24 24">'
       +(k==='in'?'<path d="M12 19V5M6 11l6-6 6 6"/>':'<path d="M12 5v14M6 13l6 6 6-6"/>')
       +'</svg></div><div class="rl"><div class="rt">'+(r.DanhMuc||'')+(r.NoiDung?' · '+r.NoiDung:'')+'</div>'
       +'<div class="rs">'+gio+' · '+(r.HinhThuc||'')+' · '+(r.NguoiTao||'')+'</div></div>'
-      +'<div class="rv num '+k+'">'+(k==='in'?'+':'−')+Number(r.SoTien||0).toLocaleString('vi-VN')+'</div></div>';
+      +'<div class="rv num '+k+'">'+(k==='in'?'+':'−')+Number(r.SoTien||0).toLocaleString('vi-VN')+'</div>'
+      +(ME&&ME.vaiTro==='chu'
+        ? '<button class="thungrac" data-xoa="'+(r.MaPhieu||'')+'" aria-label="'
+          +(laDonBan?'Huỷ đơn bán này':'Xoá khoản này')+'" title="'
+          +(laDonBan?'Huỷ đơn bán':'Xoá khoản này')+'">'
+          +'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
+        : '')
+      +'</div>';
   });
   $('#ledger').innerHTML=html;
-  if(ME&&ME.vaiTro==='chu')
-    $$('#ledger .row.bam').forEach(el=>el.onclick=()=>xoaKhoan(el.dataset.tc));
+  $$('#ledger .thungrac').forEach(b=>b.onclick=e=>{e.stopPropagation();xoaKhoan(b.dataset.xoa)});
 }
 
 $('#addCash').onclick=()=>{$('#scrim').classList.add('on');$('#csheet').classList.add('on')};
@@ -1526,8 +1580,8 @@ $$('#cats button').forEach(b=>b.onclick=()=>{
   draw();
 });
 $$('#pay button').forEach(b=>b.onclick=()=>$$('#pay button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))));
-$('#scrim').onclick=closeAll;
-addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
+$('#scrim').onclick=()=>{ if($('#xsheet').classList.contains('on')) _dongHoi(false); else closeAll(); };
+addEventListener('keydown',e=>{if(e.key==='Escape'){ if($('#xsheet').classList.contains('on')) _dongHoi(false); else closeAll(); }});
 
 /* ================= ĐĂNG NHẬP ================= */
 $('#doLogin').onclick=async()=>{
@@ -1648,12 +1702,14 @@ function veTonSua(){
 }
 
 /* đổi loại thì bộ size khác hẳn — báo trước rồi dựng lại */
-$('#e-loai').onchange = ()=>{
+$('#e-loai').onchange = async ()=>{
   const moi = $('#e-loai').value, cu = $('#e-loaiCu').value;
   if(moi === cu) return;
-  if(!confirm('Đổi loại hàng sẽ xoá hết số lượng đã khai của mẫu này (vì bộ size khác nhau).\n\nCó chắc không?')){
-    $('#e-loai').value = cu; return;
-  }
+  const co = await hoiXacNhan('Đổi loại hàng?',
+    'Giày dùng size 35–45, áo quần dùng XS–3XL — hai bộ khác hẳn nhau.<br><br>'
+    +'Đổi loại sẽ <b>xoá hết số lượng đã khai</b> của mẫu này, bạn phải nhập lại size.',
+    'Đổi loại');
+  if(!co){ $('#e-loai').value = cu; return; }
   tonSua = {};
   dsSize(moi).forEach(s=>tonSua[s]=0);
   veTonSua();
@@ -1708,9 +1764,12 @@ $('#e-luu').onclick = async ()=>{
   toast('Đã lưu thay đổi');
 };
 
-$('#e-xoa').onclick = ()=>{
+$('#e-xoa').onclick = async ()=>{
   if(!spSua) return;
-  if(!confirm('Ẩn mẫu "'+spSua.Ten+'" khỏi app?\n\nDữ liệu bán hàng cũ vẫn giữ nguyên, chỉ là mẫu này không hiện ra nữa.')) return;
+  const co = await hoiXacNhan('Ẩn mẫu này khỏi app?',
+    '<b>'+spSua.Ten+'</b><br><br>Mẫu này sẽ không hiện ra khi tra cứu nữa.<br>'
+    +'Lịch sử bán hàng cũ <b>vẫn giữ nguyên</b>.', 'Ẩn mẫu này');
+  if(!co) return;
   QUEUE.push({action:'xoaSP', body:{ma:spSua.MaSP}});
   DB.sp = DB.sp.filter(p=>p.MaSP!==spSua.MaSP);
   luuDB(); luuQueue();
@@ -1719,17 +1778,46 @@ $('#e-xoa').onclick = ()=>{
 };
 
 /* ================= XOÁ KHOẢN THU CHI ================= */
-function xoaKhoan(maPhieu){
+async function xoaKhoan(maPhieu){
   const r = DB.tc.find(x=>x.MaPhieu===maPhieu);
   if(!r) return;
+
+  /* Khoản sinh từ đơn bán: không xoá suông mà HUỶ ĐƠN — cộng trả hàng về kho,
+     xoá đơn bán và xoá luôn khoản Thu này. Có vậy sổ sách mới khớp tồn kho. */
   if(r.DanhMuc==='Bán hàng'){
-    toast('Khoản này sinh từ đơn bán, không xoá ở đây được',3600); return;
+    const gd = DB.bh.find(x=>x.MaPhieu===maPhieu) ||
+               DB.bh.find(x=>x.MaGD && r.MaLienKet && x.MaGD===r.MaLienKet);
+    const maGD = r.MaLienKet || (gd && gd.MaGD) || '';
+    if(!maGD || String(maGD).indexOf('tam')===0){
+      toast('Đơn này chưa gửi lên Google xong, đợi chút rồi thử lại',4000); return;
+    }
+    const don = DB.bh.find(x=>x.MaGD===maGD);
+    const mo = don ? (don.Ten+' · size '+don.Size+' × '+don.SoLuong) : (r.NoiDung||'');
+    const co = await hoiXacNhan('Huỷ đơn bán này?',
+      '<b>'+mo+'</b><br><br>Hàng sẽ được <b>cộng trả lại kho</b>, '
+      +'khoản thu <b>'+vnd(r.SoTien)+'</b> bị xoá khỏi sổ.<br><br>'
+      +'Dùng khi bán nhầm hoặc khách trả hàng.', 'Huỷ đơn & trả hàng về kho');
+    if(!co) return;
+
+    if(don){
+      const sp = DB.sp.find(x=>x.MaSP===don.MaSP);
+      if(sp) sp.ton[don.Size] = (Number(sp.ton[don.Size])||0) + (Number(don.SoLuong)||1);
+      DB.bh = DB.bh.filter(x=>x.MaGD!==maGD);
+    }
+    DB.tc = DB.tc.filter(x=>x.MaPhieu!==maPhieu);
+    QUEUE.push({action:'huyBan', body:{maGD}});
+    luuDB(); luuQueue(); veTatCa(); flush();
+    toast('Đã huỷ đơn · hàng đã trả về kho');
+    return;
   }
-  if(!confirm('Xoá khoản '+r.Loai+' '+vnd(r.SoTien)+'?\n'+(r.NoiDung||''))) return;
+
+  const co = await hoiXacNhan('Xoá khoản này?',
+    '<b>'+(r.DanhMuc||'')+(r.NoiDung?' · '+r.NoiDung:'')+'</b><br><br>'
+    +r.Loai+' '+vnd(r.SoTien)+'<br><br>Xoá rồi không lấy lại được.', 'Xoá khoản này');
+  if(!co) return;
   QUEUE.push({action:'xoaTC', body:{maPhieu}});
   DB.tc = DB.tc.filter(x=>x.MaPhieu!==maPhieu);
-  luuDB(); luuQueue();
-  veTatCa(); flush();
+  luuDB(); luuQueue(); veTatCa(); flush();
   toast('Đã xoá khoản này');
 }
 
@@ -1761,7 +1849,10 @@ async function thaoTacND(u, act, ds){
     toast(r.ok?('Đã đổi mật khẩu cho '+u):('Không đổi được: '+(r.loi||'')));
   } else {
     const khoa = t.trangThai!=='khoa';
-    if(!confirm((khoa?'Khoá':'Mở khoá')+' tài khoản "'+u+'"?')) return;
+    const co = await hoiXacNhan((khoa?'Khoá':'Mở khoá')+' tài khoản?',
+      '<b>'+u+'</b><br><br>'+(khoa?'Người này sẽ không đăng nhập được nữa.':'Người này đăng nhập lại được.'),
+      khoa?'Khoá tài khoản':'Mở khoá', !khoa===false);
+    if(!co) return;
     const r = await api('suaND',{u, trangThai: khoa?'khoa':'hoat_dong'});
     toast(r.ok?'Xong':('Không được: '+(r.loi==='KHONG_TU_KHOA_MINH'?'không tự khoá mình được':r.loi)));
   }
@@ -1785,6 +1876,9 @@ $('#uLuu').onclick = async ()=>{
   closeAll(); veDsND();
   toast('Đã tạo tài khoản '+u);
 };
+
+$('#x-ok').onclick   = ()=>_dongHoi(true);
+$('#x-huy').onclick  = ()=>_dongHoi(false);
 
 /* ================= KHỞI ĐỘNG ================= */
 (function(){
