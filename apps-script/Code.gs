@@ -14,6 +14,11 @@ var SHEET_TC   = 'ThuChi';
 var SHEET_ND   = 'NguoiDung';
 var SHEET_LOG  = 'NhatKy';
 var SHEET_CD   = 'CaiDat';
+var SHEET_NHANH = 'NhapNhanh';
+
+var SZ_GIAY_ARR = ['35','36','37','38','39','40','41','42','43','44','45'];
+var SZ_AO_ARR   = ['XS','S','M','L','XL','XXL','3XL'];
+var LOAI_VN = { 'Giày': 'giay', 'Dép': 'dep', 'Áo': 'ao', 'Quần': 'quan', 'Đồ bộ': 'dobo', 'Mũ': 'mu' };
 
 var COT = {};
 COT[SHEET_SP]  = ['MaSP','Ten','Hang','Loai','Mau','GiaNhap','GiaBan','ViTri','AnhID','GhiChu','TrangThai','NgayTao'];
@@ -23,6 +28,8 @@ COT[SHEET_TC]  = ['MaPhieu','ThoiGian','Loai','DanhMuc','NoiDung','SoTien','Hinh
 COT[SHEET_ND]  = ['TenDangNhap','TenHienThi','MatKhauHash','Salt','VaiTro','TrangThai'];
 COT[SHEET_LOG] = ['ThoiGian','NguoiDung','HanhDong','ChiTiet'];
 COT[SHEET_CD]  = ['Khoa','GiaTri'];
+COT[SHEET_NHANH] = ['Tên sản phẩm','Hãng','Loại','Màu','Giá nhập','Giá bán','Vị trí trong kho','Ghi chú']
+  .concat(SZ_GIAY_ARR).concat(SZ_AO_ARR).concat(['Freesize','Kết quả']);
 
 var SIZE_GIAY = '35,36,37,38,39,40,41,42,43,44,45';
 var SIZE_AO   = 'XS,S,M,L,XL,XXL,3XL';
@@ -60,7 +67,11 @@ function khoiTao() {
   }
 
   batSaoLuuHangDem();
-  Logger.log('XONG. Tài khoản: chu / 123456 — ĐỔI MẬT KHẨU NGAY bằng hàm doiMatKhau.');
+  lamDepBang();
+  var tt = ss.getSheetByName('Trang tính1') || ss.getSheetByName('Sheet1');
+  if (tt && ss.getSheets().length > 1) { try { ss.deleteSheet(tt); } catch (e) {} }
+  ss.setActiveSheet(ss.getSheetByName(SHEET_NHANH));
+  Logger.log('XONG. Tài khoản: chu / 123456 — ĐỔI MẬT KHẨU NGAY bằng hàm doiMatKhauCuaToi.');
 }
 
 /* ---------------------------------------------------------------
@@ -418,9 +429,25 @@ function timDongTon_(ma, size) {
   return 0;
 }
 
-function taoMa_(d) {
+/**
+ * Sinh mã sản phẩm dạng  NI-260910-4129.
+ * daDung: đối tượng chứa các mã đã dùng, để nạp hàng loạt không đụng nhau.
+ */
+function taoMa_(d, daDung) {
   var h = String(d.Hang || 'SP').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 2) || 'SP';
-  return h + '-' + String(Date.now()).slice(-6);
+  var n = new Date();
+  var ngay = String(n.getFullYear()).slice(2)
+    + ('0' + (n.getMonth() + 1)).slice(-2) + ('0' + n.getDate()).slice(-2);
+  var ma;
+  for (var i = 0; i < 200; i++) {
+    ma = h + '-' + ngay + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+    var trung = daDung ? !!daDung[ma] : !!timSP_(ma);
+    if (!trung) { if (daDung) daDung[ma] = 1; return ma; }
+  }
+  // hết đường thì gắn thêm mốc thời gian, chắc chắn không trùng
+  ma = h + '-' + ngay + '-' + String(Date.now()).slice(-6);
+  if (daDung) daDung[ma] = 1;
+  return ma;
 }
 
 function bam_(salt, pass) {
@@ -462,4 +489,339 @@ function ghiLog_(u, hanhDong, chiTiet) {
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* =================================================================
+   BẢNG NHẬP NHANH + LÀM ĐẸP BẢNG TÍNH
+   Mỗi sản phẩm một dòng. Điền số lượng vào cột size rồi bấm
+   menu  Chỉ Chính Hãng → Nạp hàng vào kho.
+   ================================================================= */
+
+var MAU_DO   = '#D93A55';
+var MAU_HONG = '#FBF0F2';
+var MAU_VIEN = '#EEDAE0';
+
+/** Menu riêng, hiện mỗi lần mở bảng tính */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Chỉ Chính Hãng')
+    .addItem('⬆  Nạp hàng vào kho', 'napHangTuNhapNhanh')
+    .addItem('🧹  Dọn dòng đã nạp', 'donDongDaNap')
+    .addSeparator()
+    .addItem('📊  Xem tồn kho tổng hợp', 'xemTonKho')
+    .addItem('🎨  Làm đẹp lại bảng', 'lamDepBang')
+    .addItem('💾  Sao lưu ngay', 'saoLuu')
+    .addToUi();
+}
+
+/* ---------------- LÀM ĐẸP ---------------- */
+
+function lamDepBang() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  Object.keys(COT).forEach(function (ten) {
+    var sh = ss.getSheetByName(ten);
+    if (!sh) return;
+    var nCot = COT[ten].length;
+
+    var head = sh.getRange(1, 1, 1, nCot);
+    head.setBackground(MAU_DO).setFontColor('#FFFFFF').setFontWeight('bold')
+        .setVerticalAlignment('middle').setWrap(true);
+    sh.setFrozenRows(1);
+    sh.setRowHeight(1, 34);
+
+    var maxR = Math.max(sh.getMaxRows(), 2);
+    var than = sh.getRange(2, 1, maxR - 1, nCot);
+    than.setVerticalAlignment('middle');
+    try {
+      sh.getBandings().forEach(function (b) { b.remove(); });
+      sh.getRange(1, 1, maxR, nCot)
+        .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false);
+      sh.getBandings()[0].setHeaderRowColor(MAU_DO).setFirstRowColor('#FFFFFF').setSecondRowColor(MAU_HONG);
+    } catch (e) {}
+
+    sh.getRange(1, 1, maxR, nCot).setBorder(true, true, true, true, true, true, MAU_VIEN,
+      SpreadsheetApp.BorderStyle.SOLID);
+  });
+
+  dinhDangCot_(SHEET_SP, { 'Ten': 260, 'Hang': 90, 'Loai': 70, 'Mau': 110, 'ViTri': 150, 'GhiChu': 160, 'MaSP': 130 },
+    ['GiaNhap', 'GiaBan'], ['NgayTao']);
+  dinhDangCot_(SHEET_TON, { 'MaSP': 130, 'Size': 70, 'SoLuong': 80 }, [], []);
+  dinhDangCot_(SHEET_BAN, { 'Ten': 240, 'MaSP': 130, 'MaGD': 130 },
+    ['GiaBan', 'GiaNhap', 'ThanhTien', 'Lai'], ['ThoiGian']);
+  dinhDangCot_(SHEET_TC, { 'NoiDung': 260, 'DanhMuc': 120, 'MaPhieu': 130, 'MaLienKet': 130 },
+    ['SoTien'], ['ThoiGian']);
+  dinhDangCot_(SHEET_ND, { 'MatKhauHash': 160, 'Salt': 160, 'TenHienThi': 160 }, [], []);
+  dinhDangCot_(SHEET_LOG, { 'ChiTiet': 320, 'HanhDong': 130 }, [], ['ThoiGian']);
+  dinhDangCot_(SHEET_CD, { 'Khoa': 150, 'GiaTri': 420 }, [], []);
+
+  chonSan_(SHEET_SP, 'Loai', ['giay', 'dep', 'ao', 'quan', 'dobo', 'mu']);
+  chonSan_(SHEET_SP, 'TrangThai', ['hien', 'an']);
+  chonSan_(SHEET_ND, 'VaiTro', ['chu', 'nv']);
+  chonSan_(SHEET_ND, 'TrangThai', ['hoat_dong', 'khoa']);
+  chonSan_(SHEET_TC, 'Loai', ['Thu', 'Chi']);
+  chonSan_(SHEET_TC, 'HinhThuc', ['Tiền mặt', 'Chuyển khoản']);
+
+  taoBangNhapNhanh_();
+  SpreadsheetApp.flush();
+}
+
+function dinhDangCot_(ten, rong, cotTien, cotNgay) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(ten);
+  if (!sh) return;
+  var cols = COT[ten], maxR = Math.max(sh.getMaxRows(), 2);
+
+  Object.keys(rong).forEach(function (k) {
+    var i = cols.indexOf(k);
+    if (i >= 0) sh.setColumnWidth(i + 1, rong[k]);
+  });
+  (cotTien || []).forEach(function (k) {
+    var i = cols.indexOf(k);
+    if (i >= 0) sh.getRange(2, i + 1, maxR - 1, 1).setNumberFormat('#,##0"đ"').setHorizontalAlignment('right');
+  });
+  (cotNgay || []).forEach(function (k) {
+    var i = cols.indexOf(k);
+    if (i < 0) return;
+    sh.getRange(2, i + 1, maxR - 1, 1).setNumberFormat('dd/MM/yyyy  HH:mm');
+    sh.setColumnWidth(i + 1, 150);
+  });
+}
+
+function chonSan_(ten, cot, ds) {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ten);
+  if (!sh) return;
+  var i = COT[ten].indexOf(cot);
+  if (i < 0) return;
+  var rule = SpreadsheetApp.newDataValidation().requireValueInList(ds, true)
+    .setAllowInvalid(false).build();
+  sh.getRange(2, i + 1, Math.max(sh.getMaxRows() - 1, 1), 1).setDataValidation(rule);
+}
+
+/* ---------------- BẢNG NHẬP NHANH ---------------- */
+
+function taoBangNhapNhanh_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_NHANH);
+  if (!sh) sh = ss.insertSheet(SHEET_NHANH, 0);
+  ss.setActiveSheet(sh); ss.moveActiveSheet(1);
+  var cols = COT[SHEET_NHANH];
+
+  if (sh.getLastRow() === 0 || String(sh.getRange(1, 1).getValue()) !== cols[0]) {
+    sh.getRange(1, 1, 1, cols.length).setValues([cols]);
+  }
+
+  // Hàng chú thích nhóm size, ngay trên tiêu đề
+  sh.setFrozenRows(1);
+  sh.setFrozenColumns(1);
+  sh.setRowHeight(1, 38);
+
+  var iSize = cols.indexOf('35');
+  var iAo = cols.indexOf('XS');
+  var iFree = cols.indexOf('Freesize');
+  var iKQ = cols.indexOf('Kết quả');
+
+  sh.getRange(1, 1, 1, cols.length)
+    .setBackground(MAU_DO).setFontColor('#FFFFFF').setFontWeight('bold')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
+  sh.getRange(1, iSize + 1, 1, SZ_GIAY_ARR.length).setBackground('#08949C');
+  sh.getRange(1, iAo + 1, 1, SZ_AO_ARR.length).setBackground('#6C4FD0');
+  sh.getRange(1, iFree + 1, 1, 1).setBackground('#B26A0A');
+  sh.getRange(1, iKQ + 1, 1, 1).setBackground('#4A4E56');
+
+  sh.setColumnWidth(1, 250);          // Tên
+  sh.setColumnWidth(2, 100);          // Hãng
+  sh.setColumnWidth(3, 90);           // Loại
+  sh.setColumnWidth(4, 110);          // Màu
+  sh.setColumnWidth(5, 110);          // Giá nhập
+  sh.setColumnWidth(6, 110);          // Giá bán
+  sh.setColumnWidth(7, 150);          // Vị trí
+  sh.setColumnWidth(8, 130);          // Ghi chú
+  for (var c = iSize + 1; c <= iFree + 1; c++) sh.setColumnWidth(c, 44);
+  sh.setColumnWidth(iKQ + 1, 190);
+
+  var maxR = Math.max(sh.getMaxRows(), 200);
+  if (sh.getMaxRows() < 200) sh.insertRowsAfter(sh.getMaxRows(), 200 - sh.getMaxRows());
+
+  sh.getRange(2, 5, maxR - 1, 2).setNumberFormat('#,##0"đ"');
+  sh.getRange(2, iSize + 1, maxR - 1, SZ_GIAY_ARR.length + SZ_AO_ARR.length + 1)
+    .setNumberFormat('0').setHorizontalAlignment('center');
+  sh.getRange(2, iKQ + 1, maxR - 1, 1).setFontColor('#08949C').setFontSize(10);
+
+  var rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Giày', 'Dép', 'Áo', 'Quần', 'Đồ bộ', 'Mũ'], true)
+    .setAllowInvalid(false).build();
+  sh.getRange(2, 3, maxR - 1, 1).setDataValidation(rule);
+
+  var ruleHang = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Nike', 'Adidas', 'Puma', 'New Balance', 'New Era', 'Khác'], true)
+    .setAllowInvalid(true).build();
+  sh.getRange(2, 2, maxR - 1, 1).setDataValidation(ruleHang);
+
+  sh.getRange(1, 1, maxR, cols.length)
+    .setBorder(true, true, true, true, true, true, MAU_VIEN, SpreadsheetApp.BorderStyle.SOLID);
+
+  // ô hướng dẫn nổi
+  var note = sh.getRange(1, 1);
+  note.setNote('MỖI SẢN PHẨM MỘT DÒNG.\n\n'
+    + '1. Điền Tên, Hãng, Loại, Giá nhập, Giá bán, Vị trí\n'
+    + '2. Điền số lượng vào ĐÚNG NHÓM SIZE:\n'
+    + '   • Giày, Dép  → dùng nhóm xanh (35–45)\n'
+    + '   • Áo, Quần, Đồ bộ → dùng nhóm tím (XS–3XL)\n'
+    + '   • Mũ → cột Freesize (cam)\n'
+    + '3. Menu "Chỉ Chính Hãng" → "Nạp hàng vào kho"\n\n'
+    + 'Ô nào để trống thì bỏ qua. Nạp xong cột Kết quả hiện mã sản phẩm.');
+}
+
+/* ---------------- NẠP HÀNG ---------------- */
+
+function napHangTuNhapNhanh() {
+  var ui = SpreadsheetApp.getUi();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_NHANH);
+  if (!sh) { ui.alert('Chưa có bảng NhapNhanh. Chạy "Làm đẹp lại bảng" trước.'); return; }
+
+  var cols = COT[SHEET_NHANH];
+  var iKQ = cols.indexOf('Kết quả');
+  var iSize = cols.indexOf('35');
+  var iAo = cols.indexOf('XS');
+  var iFree = cols.indexOf('Freesize');
+  var lastRow = sh.getLastRow();
+  if (lastRow < 2) { ui.alert('Bảng nhập nhanh chưa có dòng nào.'); return; }
+
+  var v = sh.getRange(2, 1, lastRow - 1, cols.length).getValues();
+  var shSP = sheet_(SHEET_SP), shTon = sheet_(SHEET_TON), shTC = sheet_(SHEET_TC);
+
+  var themSP = [], themTon = [], themTC = [], ketQua = [], soMau = 0, soMon = 0, tongTien = 0;
+  var now = new Date();
+
+  // gom sẵn mọi mã đang có để mã mới không đụng mã cũ, cũng không đụng nhau
+  var daDung = {};
+  docBang_(SHEET_SP).forEach(function (p) { daDung[String(p.MaSP)] = 1; });
+
+  for (var r = 0; r < v.length; r++) {
+    var row = v[r];
+    var ten = String(row[0] || '').trim();
+    var daNap = String(row[iKQ] || '').trim();
+
+    if (!ten || daNap) { ketQua.push([row[iKQ] || '']); continue; }
+
+    var loaiVN = String(row[2] || '').trim();
+    var loai = LOAI_VN[loaiVN];
+    if (!loai) { ketQua.push(['⚠ thiếu Loại']); continue; }
+
+    var dsSize = (loai === 'mu') ? ['Freesize']
+               : (loai === 'giay' || loai === 'dep') ? SZ_GIAY_ARR : SZ_AO_ARR;
+    var goc = (loai === 'mu') ? iFree : (loai === 'giay' || loai === 'dep') ? iSize : iAo;
+
+    var ton = {}, tong = 0;
+    for (var k = 0; k < dsSize.length; k++) {
+      var n = Number(row[goc + k]) || 0;
+      if (n > 0) { ton[dsSize[k]] = n; tong += n; }
+    }
+    if (tong === 0) { ketQua.push(['⚠ chưa điền số lượng']); continue; }
+
+    var hang = String(row[1] || '').trim();
+    var ma = taoMa_({ Hang: hang }, daDung);
+    var giaNhap = Number(row[4]) || 0, giaBan = Number(row[5]) || 0;
+
+    themSP.push([ma, ten, hang, loai, String(row[3] || ''), giaNhap, giaBan,
+      String(row[6] || ''), '', String(row[7] || ''), 'hien', now]);
+    for (var s in ton) themTon.push([ma, s, ton[s]]);
+
+    var tien = giaNhap * tong;
+    if (tien > 0) {
+      themTC.push(['TC' + (now.getTime() + soMau), now, 'Chi', 'Nhập hàng',
+        ten + ' · ' + tong + ' món', tien, 'Chuyển khoản', 'nhap_nhanh', ma]);
+      tongTien += tien;
+    }
+    ketQua.push(['✓ ' + ma + ' · ' + tong + ' món']);
+    soMau++; soMon += tong;
+  }
+
+  if (!soMau) {
+    ui.alert('Không có dòng mới nào để nạp.\n\nDòng đã nạp rồi thì cột "Kết quả" có dấu ✓ — muốn nạp lại phải xoá ô đó.');
+    return;
+  }
+
+  if (themSP.length) shSP.getRange(shSP.getLastRow() + 1, 1, themSP.length, themSP[0].length).setValues(themSP);
+  if (themTon.length) shTon.getRange(shTon.getLastRow() + 1, 1, themTon.length, 3).setValues(themTon);
+  if (themTC.length) shTC.getRange(shTC.getLastRow() + 1, 1, themTC.length, themTC[0].length).setValues(themTC);
+
+  sh.getRange(2, iKQ + 1, ketQua.length, 1).setValues(ketQua);
+  ghiLog_('nhap_nhanh', 'nap_hang', soMau + ' mẫu, ' + soMon + ' món');
+
+  ui.alert('Đã nạp xong',
+    'Thêm ' + soMau + ' mẫu, tổng ' + soMon + ' món.\n'
+    + 'Đã ghi Chi nhập hàng: ' + tongTien.toLocaleString('vi-VN') + 'đ\n\n'
+    + 'Mở app bấm Cài đặt → Tải lại là thấy ngay.', ui.ButtonSet.OK);
+}
+
+/** Xoá các dòng đã nạp cho bảng gọn lại */
+function donDongDaNap() {
+  var ui = SpreadsheetApp.getUi();
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NHANH);
+  var iKQ = COT[SHEET_NHANH].indexOf('Kết quả');
+  var lastRow = sh.getLastRow();
+  if (lastRow < 2) return;
+
+  var v = sh.getRange(2, iKQ + 1, lastRow - 1, 1).getValues();
+  var xoa = 0;
+  for (var r = v.length - 1; r >= 0; r--) {
+    if (String(v[r][0]).indexOf('✓') === 0) { sh.deleteRow(r + 2); xoa++; }
+  }
+  ui.alert(xoa ? ('Đã dọn ' + xoa + ' dòng đã nạp.') : 'Không có dòng nào đã nạp.');
+}
+
+/** Bảng tổng hợp tồn kho, dễ nhìn hơn tab TonKho thô */
+function xemTonKho() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ten = 'TongHopTon';
+  var sh = ss.getSheetByName(ten);
+  if (sh) ss.deleteSheet(sh);
+  sh = ss.insertSheet(ten);
+
+  var sp = docBang_(SHEET_SP).filter(function (p) { return p.TrangThai !== 'an'; });
+  var ton = docBang_(SHEET_TON);
+  var map = {};
+  ton.forEach(function (t) {
+    if (!map[t.MaSP]) map[t.MaSP] = {};
+    map[t.MaSP][String(t.Size)] = Number(t.SoLuong) || 0;
+  });
+
+  var cot = ['Mã', 'Tên sản phẩm', 'Loại', 'Vị trí', 'Tổng còn']
+    .concat(SZ_GIAY_ARR).concat(SZ_AO_ARR).concat(['Freesize']);
+  var rows = [cot];
+
+  sp.forEach(function (p) {
+    var t = map[p.MaSP] || {};
+    var tong = 0;
+    for (var k in t) tong += t[k];
+    var r = [p.MaSP, p.Ten, p.Loai, p.ViTri, tong];
+    SZ_GIAY_ARR.concat(SZ_AO_ARR).concat(['Freesize']).forEach(function (s) {
+      r.push(t[s] === undefined ? '' : t[s]);
+    });
+    rows.push(r);
+  });
+
+  sh.getRange(1, 1, rows.length, cot.length).setValues(rows);
+  sh.getRange(1, 1, 1, cot.length).setBackground(MAU_DO).setFontColor('#FFFFFF')
+    .setFontWeight('bold').setHorizontalAlignment('center');
+  sh.setFrozenRows(1); sh.setFrozenColumns(2);
+  sh.setColumnWidth(1, 130); sh.setColumnWidth(2, 260); sh.setColumnWidth(3, 70);
+  sh.setColumnWidth(4, 150); sh.setColumnWidth(5, 80);
+  for (var c = 6; c <= cot.length; c++) sh.setColumnWidth(c, 44);
+
+  if (rows.length > 1) {
+    var vung = sh.getRange(2, 6, rows.length - 1, cot.length - 5);
+    var het = SpreadsheetApp.newConditionalFormatRule()
+      .whenNumberEqualTo(0).setBackground('#F3DFE5').setFontColor('#9F8B93')
+      .setRanges([vung]).build();
+    var it = SpreadsheetApp.newConditionalFormatRule()
+      .whenNumberEqualTo(1).setBackground('#FBEBD4').setFontColor('#B26A0A')
+      .setRanges([vung]).build();
+    sh.setConditionalFormatRules([het, it]);
+    sh.getRange(2, 5, rows.length - 1, 1).setFontWeight('bold');
+  }
+  ss.setActiveSheet(sh);
 }

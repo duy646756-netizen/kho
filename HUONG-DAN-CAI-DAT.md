@@ -166,16 +166,72 @@ Icon logo cửa hàng hiện trên màn hình chính. Bấm vào là mở toàn 
 
 ---
 
-## Phần D — Bắt đầu dùng
+## Phần D — Nhập hàng vào kho
 
-Kho đang trống. Mở **Nhập hàng**:
+### Nếu bạn đã chạy `khoiTao` từ trước
 
-- **Mẫu mới**: để ô *"Nhập cho mẫu nào"* ở dòng *— Thêm mẫu mới —*, điền tên, giá, vị trí, rồi bấm **+** vào từng size
-- **Mẫu đã có, về thêm hàng**: chọn tên mẫu ở ô đó, chỉ cần bấm **+** vào size
+Bản `Code.gs` mới có thêm **bảng nhập nhanh**. Cập nhật một lần:
 
-Với 100 mẫu đầu tiên, gõ thẳng vào bảng tính trên máy tính sẽ nhanh hơn nhiều:
-mở tab **SanPham** điền từng dòng, rồi tab **TonKho** điền `MaSP | Size | SoLuong`.
-Xong vào app bấm **Cài đặt → Tải lại**.
+1. Mở Apps Script, **xoá hết** nội dung cũ, dán lại toàn bộ `Code.gs` mới, Ctrl+S
+2. Chọn hàm **`lamDepBang`** → **Chạy**
+3. Quay lại bảng tính, **tải lại trang (F5)** — sẽ thấy tab **NhapNhanh** ở đầu và menu **"Chỉ Chính Hãng"** trên thanh menu
+4. Nếu đã Triển khai rồi thì làm thêm: **Triển khai → Quản lý bản triển khai → bút chì → Phiên bản: Mới → Triển khai**
+
+### Cách nhập 100 mẫu đầu tiên — dùng bảng NhapNhanh
+
+Mở tab **NhapNhanh**. **Mỗi sản phẩm một dòng**, không phải gõ mã, không phải đụng vào tab TonKho.
+
+| Cột | Điền gì |
+|---|---|
+| Tên sản phẩm | `Nike Air Force 1 '07` |
+| Hãng | chọn trong danh sách xổ xuống |
+| Loại | chọn: Giày / Dép / Áo / Quần / Đồ bộ / Mũ |
+| Màu | `Trắng` |
+| Giá nhập, Giá bán | gõ số trần, ví dụ `1750000` — bảng tự thêm dấu chấm và chữ đ |
+| Vị trí trong kho | `Kệ A · Thùng 2` |
+
+Rồi điền **số lượng vào đúng nhóm cột size**, phân biệt bằng màu tiêu đề:
+
+- 🟦 **Xanh (35 → 45)** — cho **Giày** và **Dép**
+- 🟪 **Tím (XS → 3XL)** — cho **Áo**, **Quần**, **Đồ bộ**
+- 🟧 **Cam (Freesize)** — cho **Mũ**
+
+Size nào không có thì **để trống**, không cần gõ số 0.
+
+Điền xong bao nhiêu dòng cũng được, rồi bấm menu:
+
+**Chỉ Chính Hãng → ⬆ Nạp hàng vào kho**
+
+App sẽ tự:
+- Sinh mã sản phẩm (dạng `NI-260910-4129`) — đảm bảo không trùng
+- Tách ra thành các dòng trong tab **SanPham** và **TonKho**
+- Ghi một khoản **Chi — Nhập hàng** vào sổ thu chi, tính theo giá nhập × số lượng
+- Ghi kết quả vào cột **Kết quả**: `✓ NI-260910-4129 · 10 món`
+
+Xong vào app bấm **Cài đặt → Tải lại** là thấy hàng.
+
+> **Dòng đã nạp sẽ không bị nạp lại** dù bạn bấm nút nhiều lần — vì cột *Kết quả* đã có dấu ✓.
+> Muốn dọn cho bảng gọn: **Chỉ Chính Hãng → 🧹 Dọn dòng đã nạp**.
+>
+> Dòng nào thiếu Loại hoặc chưa điền số lượng sẽ hiện ⚠ và **bị bỏ qua**, các dòng khác vẫn nạp bình thường.
+
+### Menu "Chỉ Chính Hãng" có gì
+
+| Mục | Làm gì |
+|---|---|
+| ⬆ Nạp hàng vào kho | Đưa các dòng trong NhapNhanh vào kho thật |
+| 🧹 Dọn dòng đã nạp | Xoá các dòng đã có dấu ✓ |
+| 📊 Xem tồn kho tổng hợp | Bảng một dòng một mẫu, đủ mọi size, ô hết hàng tô xám, còn 1 tô cam |
+| 🎨 Làm đẹp lại bảng | Chạy khi bảng bị xộc xệch |
+| 💾 Sao lưu ngay | Không đợi đến 2 giờ sáng |
+
+### Nhập thêm hàng sau này
+
+Ba cách, chọn cái tiện nhất lúc đó:
+
+1. **Trong app** — mở **Nhập hàng**, chọn mẫu ở ô *"Nhập cho mẫu nào"*, bấm **+** vào size. Làm ngay trên điện thoại lúc mở thùng.
+2. **Trong app, mẫu mới** — để ô đó ở *— Thêm mẫu mới —* rồi điền form.
+3. **Bảng NhapNhanh** — khi về cả lô nhiều mẫu, ngồi máy tính gõ nhanh hơn.
 
 ---
 
@@ -196,6 +252,7 @@ Xong vào app bấm **Cài đặt → Tải lại**.
 - **Mỗi đêm 2 giờ sáng**: bản sao toàn bộ bảng tính được cất vào thư mục Drive *"Sao luu kho Chi Chinh Hang"*, giữ 30 bản gần nhất
 - **Mọi thay đổi** đều ghi vào tab *NhatKy*: ai làm, làm gì, lúc nào
 - **Mỗi lần bán**: trừ tồn → ghi sổ bán hàng → ghi một khoản Thu vào sổ thu chi
+- **Mỗi lần nạp từ bảng NhapNhanh**: sinh mã, tách dòng tồn kho, ghi khoản Chi nhập hàng
 
 ## Việc nên làm mỗi tháng
 
