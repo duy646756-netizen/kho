@@ -195,9 +195,25 @@ function doPost(e) {
 /* ===================== ĐĂNG NHẬP ===================== */
 
 function dangNhap_(req) {
-  var u = timNguoiDung_(String(req.u || '').trim().toLowerCase());
-  if (!u || u.TrangThai === 'khoa') return { ok: false, loi: 'SAI_TAI_KHOAN' };
-  if (bam_(u.Salt, String(req.p || '')) !== u.MatKhauHash) return { ok: false, loi: 'SAI_TAI_KHOAN' };
+  var ten = String(req.u || '').trim().toLowerCase();
+
+  // Chặn dò mật khẩu: sai 10 lần thì khoá tạm 15 phút.
+  // Cần thiết vì địa chỉ máy chủ nằm trong kho GitHub công khai.
+  var cache = CacheService.getScriptCache();
+  var khoa = 'sai_' + ten;
+  var soSai = Number(cache.get(khoa) || 0);
+  if (soSai >= 10) return { ok: false, loi: 'THU_QUA_NHIEU' };
+
+  var u = timNguoiDung_(ten);
+  var dung = u && u.TrangThai !== 'khoa' && bam_(u.Salt, String(req.p || '')) === u.MatKhauHash;
+
+  if (!dung) {
+    cache.put(khoa, String(soSai + 1), 900);
+    ghiLog_(ten || '(trong)', 'dang_nhap_that_bai', 'lan thu ' + (soSai + 1));
+    return { ok: false, loi: 'SAI_TAI_KHOAN' };
+  }
+
+  cache.remove(khoa);
   ghiLog_(u.TenDangNhap, 'dang_nhap', '');
   return { ok: true, token: taoToken_(u.TenDangNhap), ten: u.TenHienThi, vaiTro: u.VaiTro };
 }

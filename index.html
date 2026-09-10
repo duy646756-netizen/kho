@@ -833,7 +833,10 @@ const LOAI={giay:'Giày',dep:'Dép',ao:'Áo',quan:'Quần',dobo:'Đồ bộ',mu:
 const ICON={giay:'shoe',dep:'slide',ao:'tee',quan:'short',dobo:'set',mu:'cap'};
 const TINT={giay:'#6E7278',dep:'#4A4E56',ao:'#5A5F68',quan:'#4A4E56',dobo:'#3E434B',mu:'#4B5058'};
 
-let API   = LS.getItem('cch_api')   || '';
+/* Địa chỉ máy chủ gắn sẵn — file DAY-LEN-GITHUB.bat sẽ điền vào dòng dưới đây,
+   nhờ vậy không máy nào phải dán link nữa. */
+const API_MAC_DINH = ''; /* DIA-CHI-MAY-CHU */
+let API   = LS.getItem('cch_api') || API_MAC_DINH || '';
 let TOKEN = LS.getItem('cch_token') || '';
 let ME    = JSON.parse(LS.getItem('cch_me')   || 'null');
 let DB    = JSON.parse(LS.getItem('cch_db')   || 'null') || {sp:[],cd:{},bh:[],tc:[]};
@@ -1534,7 +1537,10 @@ $('#doLogin').onclick=async()=>{
   try{
     const r=await api('login',{u:$('#u').value.trim(),p:$('#p').value},25000);
     if(!r.ok){
-      $('#loginErr').textContent=r.loi==='SAI_TAI_KHOAN'?'Sai tài khoản hoặc mật khẩu.':'Lỗi: '+r.loi;
+      $('#loginErr').textContent =
+        r.loi==='SAI_TAI_KHOAN' ? 'Sai tài khoản hoặc mật khẩu.'
+      : r.loi==='THU_QUA_NHIEU' ? 'Sai quá nhiều lần. Đợi 15 phút rồi thử lại.'
+      : 'Lỗi: '+r.loi;
       return;
     }
     TOKEN=r.token; ME={u:$('#u').value.trim(),ten:r.ten,vaiTro:r.vaiTro};
@@ -1781,7 +1787,11 @@ $('#uLuu').onclick = async ()=>{
 /* ================= KHỞI ĐỘNG ================= */
 (function(){
   const th=LS.getItem('cch_theme'); if(th)document.documentElement.dataset.theme=th;
-  if(API)$('#apiUrl').value=API;
+  if(API){
+    LS.setItem('cch_api',API);
+    $('#apiUrl').value=API;
+    if(API_MAC_DINH) $('#apiBox').style.display='none';   // gắn sẵn rồi thì giấu đi cho gọn
+  }
   nhapKhoiDong();
   if(TOKEN&&ME){ vaoApp(); pull().then(flush); }
   else { $('#login').style.display=''; }

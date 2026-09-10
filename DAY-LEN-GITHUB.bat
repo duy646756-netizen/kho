@@ -7,25 +7,53 @@ echo ==================================================
 echo    DAY APP KHO CHI CHINH HANG LEN GITHUB
 echo ==================================================
 echo.
-echo Truoc khi chay file nay, ban phai lam xong 2 viec:
+echo Truoc khi chay, ban phai co:
+echo   1. Tai khoan github.com
+echo   2. Kho ten "kho", chon Public
+echo      (KHONG tich "Add a README file")
 echo.
-echo   1. Tao tai khoan tai github.com
-echo   2. Bam dau + goc tren phai ^> New repository
-echo      - Repository name: kho
-echo      - Chon Public
-echo      - KHONG tich "Add a README file"
-echo      - Bam Create repository
-echo.
-echo Neu chua lam, dong cua so nay lai, lam xong roi mo lai.
-echo.
-set /p U=Nhap ten tai khoan GitHub cua ban:
+set /p U=Ten tai khoan GitHub cua ban:
 
 if "%U%"=="" (
   echo.
-  echo Ban chua nhap gi ca. Dong cua so roi chay lai file nay.
+  echo Ban chua nhap gi ca. Dong cua so roi chay lai.
   echo.
   pause
   exit /b
+)
+
+echo.
+echo --------------------------------------------------
+echo  DIA CHI MAY CHU (Apps Script)
+echo --------------------------------------------------
+echo Dan link Ung dung web cua Apps Script vao day.
+echo No co dang:  https://script.google.com/macros/s/AKfy.../exec
+echo.
+echo Gan san mot lan o day thi SAU NAY KHONG MAY NAO PHAI DAN NUA.
+echo Bo trong neu ban muon tu dan tay trong app.
+echo.
+set /p A=Dia chi may chu:
+
+if not "%A%"=="" (
+  echo %A% | findstr /E /C:"/exec" >nul
+  if errorlevel 1 (
+    echo.
+    echo !! Dia chi phai ket thuc bang  /exec  chu khong phai /dev
+    echo    Kiem tra lai roi chay lai file nay.
+    echo.
+    pause
+    exit /b
+  )
+  echo.
+  echo Dang gan dia chi may chu vao app...
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0gan-dia-chi.ps1" -DiaChi "%A%"
+  if errorlevel 1 (
+    echo Khong gan duoc. Van tiep tuc day len, ban se dan tay trong app.
+  ) else (
+    echo Da gan xong.
+  )
+  git add index.html >nul 2>&1
+  git -c core.autocrlf=false commit -q -m "Gan dia chi may chu" >nul 2>&1
 )
 
 echo.
@@ -42,20 +70,19 @@ if errorlevel 1 goto LOI
 
 echo.
 echo ==================================================
-echo    XONG! Con 1 buoc cuoi
+echo    XONG!
 echo ==================================================
 echo.
-echo 1. Vao: https://github.com/%U%/kho
-echo 2. Bam tab Settings (rang cua, hang tren cung)
-echo 3. Cot trai keo xuong chon Pages
-echo 4. Muc Source: chon "Deploy from a branch"
-echo 5. Muc Branch: chon "main" va "/ (root)" roi bam Save
-echo 6. Doi 1-2 phut, tai lai trang
-echo.
-echo Dia chi app cua ban se la:
+echo Dia chi app cua ban:
 echo    https://%U%.github.io/kho/
 echo.
-echo Gui dia chi do cho Claude de kiem tra ho.
+echo Doi 1-2 phut cho GitHub dung xong roi mo len.
+echo.
+echo Neu day la lan dau, vao https://github.com/%U%/kho
+echo   Settings ^> Pages ^> Source: Deploy from a branch
+echo   Branch: main + / (root) ^> Save
+echo.
+echo TREN DIEN THOAI: mo app roi dong han di, mo lai de nhan ban moi.
 echo.
 pause
 exit /b
@@ -66,13 +93,12 @@ echo ==================================================
 echo    CHUA DAY LEN DUOC
 echo ==================================================
 echo.
-echo Thuong do 1 trong 3 ly do sau:
-echo.
+echo Thuong do 1 trong 3 ly do:
 echo   - Chua tao kho ten "kho" tren github.com
 echo   - Go sai ten tai khoan (phai dung y het, khong dau)
 echo   - Bam Cancel o cua so dang nhap GitHub
 echo.
-echo Sua xong roi bam dup file nay chay lai. Chay lai nhieu lan khong sao.
+echo Sua xong bam dup file nay chay lai. Chay lai nhieu lan khong sao.
 echo.
 pause
 exit /b
