@@ -148,9 +148,11 @@ Trang hiện ra sau đó có dòng địa chỉ dạng `https://github.com/TEN-C
 
 Sửa xong đợi 1–2 phút Pages tự cập nhật. Trên điện thoại **đóng hẳn app rồi mở lại** để nhận bản mới.
 
+---
+
 ## Phần C — Cài lên iPhone (~2 phút)
 
-1. Mở **Safari** (bắt buộc Safari, không dùng Chrome), vào link ở bước B4
+1. Mở **Safari** (bắt buộc Safari, không dùng Chrome), vào link ở bước B3
 2. Bấm mũi tên **▸ Địa chỉ máy chủ**, dán đường dẫn Apps Script đã chép ở bước A6
 3. Gõ tài khoản **`chu`** và mật khẩu mới → **Đăng nhập**
 4. Bấm nút **Chia sẻ** (ô vuông có mũi tên lên, ở thanh dưới)
