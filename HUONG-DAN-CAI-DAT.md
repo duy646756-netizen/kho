@@ -81,40 +81,72 @@ Muốn thêm người nữa thì sửa lại 3 dòng đó rồi chạy lại.
 
 ## Phần B — Đưa app lên mạng (~10 phút)
 
-### B1. Tạo tài khoản GitHub
+Thư mục `kho-chi-chinh-hang` **đã được chuẩn bị sẵn thành một kho git**, đã có bản ghi đầu tiên.
+Bạn chọn **một trong hai cách** ở bước B2.
+
+### B1. Tạo kho trên GitHub (cách nào cũng cần bước này)
 
 1. Vào **github.com** → **Sign up** → tạo tài khoản miễn phí
+2. Góc trên phải bấm dấu **+** → **New repository**
+3. Repository name: gõ **`kho`**
+4. Chọn **Public**
 
-### B2. Tạo kho chứa
+   > Bắt buộc phải Public, vì GitHub Pages miễn phí chỉ chạy với kho công khai.
+   > **Công khai ở đây là công khai mã nguồn app, không phải dữ liệu cửa hàng.**
+   > Tôi đã rà lại toàn bộ file: không có mật khẩu, không có địa chỉ máy chủ nào bị nhúng vào.
+   > Kho hàng, giá vốn, sổ thu chi nằm trong Google Sheet riêng của bạn — muốn xem vẫn phải có mật khẩu.
 
-1. Góc trên phải bấm **+** → **New repository**
-2. Repository name: **`kho`**
-3. Chọn **Public**
-4. Bấm **Create repository**
+5. **Không tích** ô *"Add a README file"*
+6. Bấm **Create repository**
 
-### B3. Tải file lên
+Trang hiện ra sau đó có dòng địa chỉ dạng `https://github.com/TEN-CUA-BAN/kho.git` — để đó, lát cần.
 
-1. Bấm dòng chữ **uploading an existing file**
-2. Kéo thả **6 file** này vào (chỉ 6 file, **không kéo thư mục `apps-script`**):
-   - `index.html`
-   - `manifest.webmanifest`
-   - `sw.js`
-   - `icon-192.png`
-   - `icon-512.png`
-   - `apple-touch-icon.png`
-3. Bấm **Commit changes**
+### B2 — Cách 1: kéo thả (dễ hơn, không phải gõ lệnh)
 
-### B4. Bật trang web
+1. Ở trang kho vừa tạo, bấm dòng chữ **uploading an existing file**
+2. Mở thư mục `Downloads\kho-chi-chinh-hang` trong File Explorer
+3. Bấm Ctrl+A chọn hết rồi **kéo thả tất cả** vào ô trên trình duyệt
+   (kéo cả thư mục `apps-script` — nó không ảnh hưởng gì, lại có thêm một bản lưu mã máy chủ phòng thân)
+4. Kéo xuống dưới bấm **Commit changes**
 
-1. Vào tab **Settings** → cột trái chọn **Pages**
-2. Mục *Source*: chọn **Deploy from a branch**
-3. Branch: chọn **main** và **/ (root)** → bấm **Save**
-4. Đợi 1–2 phút, tải lại trang, sẽ hiện link dạng:
-   `https://tên-tài-khoản.github.io/kho/`
+### B2 — Cách 2: đẩy bằng lệnh (gõ một lần, sau này cập nhật chỉ mất 1 dòng)
 
-Đó là địa chỉ app của bạn.
+1. Mở File Explorer vào `Downloads\kho-chi-chinh-hang`
+2. Bấm chuột phải vào chỗ trống → **Open Git Bash here**
+   (nếu không thấy dòng đó thì dùng Cách 1)
+3. Gõ 2 lệnh sau, **thay `TEN-CUA-BAN`** bằng tên tài khoản GitHub của bạn:
 
----
+   ```
+   git remote add origin https://github.com/TEN-CUA-BAN/kho.git
+   git push -u origin main
+   ```
+
+4. Một cửa sổ đăng nhập GitHub bật lên → đăng nhập → xong
+
+### B3. Bật trang web
+
+1. Trong kho trên GitHub, vào tab **Settings** (răng cưa, hàng trên cùng)
+2. Cột trái kéo xuống chọn **Pages**
+3. Mục *Source*: chọn **Deploy from a branch**
+4. Mục *Branch*: chọn **main** và **/ (root)** → bấm **Save**
+5. **Đợi 1–2 phút** rồi tải lại trang. Phía trên sẽ hiện dòng
+   *"Your site is live at ..."* với địa chỉ dạng:
+
+   ```
+   https://TEN-CUA-BAN.github.io/kho/
+   ```
+
+Đó là địa chỉ app của bạn. Gửi cho tôi để tôi kiểm tra hộ xem đã chạy đúng chưa.
+
+### Sau này muốn sửa app
+
+- Dùng Cách 1: vào kho, bấm **Add file → Upload files**, kéo file mới vào, Commit
+- Dùng Cách 2: mở Git Bash trong thư mục đó rồi gõ
+  ```
+  git add -A && git commit -m "cap nhat" && git push
+  ```
+
+Sửa xong đợi 1–2 phút Pages tự cập nhật. Trên điện thoại **đóng hẳn app rồi mở lại** để nhận bản mới.
 
 ## Phần C — Cài lên iPhone (~2 phút)
 
