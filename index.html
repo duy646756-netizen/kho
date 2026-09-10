@@ -104,6 +104,48 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .e-anh .art{width:70%;height:70%;filter:var(--art-filter)}
 .linkbtn{background:none;border:0;color:var(--brand);font-size:13.5px;text-decoration:underline;
   text-underline-offset:3px;padding:8px 0;cursor:pointer}
+/* ----- màn hình nhập hàng cho điện thoại ----- */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--panel-2);border-radius:8px;padding:4px;margin-bottom:18px}
+.seg button{padding:11px 8px;border-radius:6px;font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;
+  font-size:14.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--brand);box-shadow:0 1px 3px rgba(90,40,55,.14)}
+.pick{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.pick button{padding:9px 15px;border-radius:99px;background:var(--panel-2);color:var(--ink-2);
+  font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;
+  text-transform:uppercase;border:1px solid transparent}
+.pick button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.flabel{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 7px}
+#szBox{background:var(--panel);border:1px solid var(--line-soft);border-radius:8px;padding:14px;margin:6px 0 16px}
+.szgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (min-width:560px){.szgrid{grid-template-columns:repeat(6,1fr)}}
+.sz{position:relative;aspect-ratio:1/1;border-radius:10px;background:var(--panel-2);border:1px solid transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:transform .1s,background .12s}
+.sz:active{transform:scale(.94)}
+.sz .lb{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-3)}
+.sz .n{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:23px;font-weight:700;line-height:1;color:var(--ink-3)}
+.sz.co{background:var(--brand);border-color:var(--brand)}
+.sz.co .lb{color:rgba(255,255,255,.8)}
+.sz.co .n{color:var(--on-brand)}
+.sz .tru{position:absolute;top:-6px;right:-6px;width:26px;height:26px;border-radius:50%;background:var(--panel);
+  border:1px solid var(--line);color:var(--ink-2);font-size:17px;line-height:23px;font-weight:700}
+.szhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.sztong{font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;font-size:15px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3)}
+.sztong.co{color:var(--brand)}
+.szhint{font-size:12px;color:var(--ink-3)}
+#szTien{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+#szNhanh{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+#szNhanh button{padding:7px 12px;border-radius:99px;border:1px solid var(--line);color:var(--ink-2);
+  font-size:12.5px;font-weight:500}
+#szNhanh button:hover{border-color:var(--brand);color:var(--brand)}
+.stickybar{display:grid;gap:9px;margin-top:22px}
+.hit.chon{border-color:var(--brand);background:var(--brand-soft)}
+#tDs{max-height:320px;overflow-y:auto;margin-top:10px}
+#tChon{display:none;font-family:'Roboto Condensed',Roboto,sans-serif;font-weight:700;font-size:17px;
+  text-transform:uppercase;color:var(--brand);margin:12px 0 0}
+#phienBox{margin-top:26px}
+.phienhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
 .sync{font-family:'Roboto Condensed',Roboto,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;padding:3px 8px;border-radius:99px;white-space:nowrap}
 .sync.ok{color:var(--thu);background:var(--thu-soft)}
@@ -482,45 +524,69 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       <p class="eyebrow">Kho tầng 2</p>
       <h2 class="h1">Nhập hàng</h2>
 
-      <div class="field"><label for="f-mausan">Nhập cho mẫu nào</label>
-        <select id="f-mausan"></select></div>
-
-      <p class="h2" id="impTitle" style="margin-top:6px">Thêm mẫu mới</p>
-
-      <div class="photorow moi">
-        <button class="photodrop" id="photoBtn" type="button">
-          <svg class="hexmark" viewBox="0 0 116 100"><use href="#hex-o"></use></svg>
-          <svg class="cam" viewBox="0 0 24 24"><path d="M3 8.5h3.2l1.6-2.2h8.4l1.6 2.2H21v10H3Z"/><circle cx="12" cy="13" r="3.4"/></svg>
-          <span>Thêm ảnh</span>
-        </button>
-        <div class="photohint"><b>Ảnh sản phẩm</b>
-          <p>Chụp thẳng bằng điện thoại. App nén còn khoảng 50KB rồi đẩy lên Google Drive.</p></div>
+      <div class="seg" id="impMode">
+        <button type="button" data-m="moi" aria-pressed="true">Mẫu mới</button>
+        <button type="button" data-m="them" aria-pressed="false">Về thêm hàng</button>
       </div>
 
-      <div class="two moi">
-        <div class="field"><label for="f-ten">Tên sản phẩm</label><input id="f-ten" placeholder="Nike Air Force 1 07"></div>
-        <div class="field"><label for="f-hang">Hãng</label>
-          <select id="f-hang"><option>Nike</option><option>Adidas</option><option>Puma</option><option>New Balance</option><option>New Era</option><option>Khác</option></select></div>
-      </div>
-      <div class="two moi">
-        <div class="field"><label for="f-loai">Loại hàng</label>
-          <select id="f-loai"><option value="giay">Giày</option><option value="dep">Dép</option><option value="ao">Áo</option><option value="quan">Quần</option><option value="dobo">Đồ bộ</option><option value="mu">Mũ</option></select></div>
-        <div class="field"><label for="f-mau">Màu</label><input id="f-mau" placeholder="Trắng / Xanh"></div>
-      </div>
-      <div class="two moi">
-        <div class="field"><label for="f-nhap">Giá nhập</label><input id="f-nhap" class="num" inputmode="numeric" placeholder="1750000"></div>
-        <div class="field"><label for="f-ban">Giá bán</label><input id="f-ban" class="num" inputmode="numeric" placeholder="2290000"></div>
-      </div>
-      <div class="field moi"><label for="f-vt">Vị trí trong kho</label><input id="f-vt" placeholder="Kệ A · Thùng 2"></div>
+      <div id="khoiMoi">
+        <div class="field"><label for="n-ten">Tên sản phẩm</label>
+          <input id="n-ten" placeholder="Nike Air Force 1 07" autocomplete="off"></div>
 
-      <p class="h2">Số lượng theo size <span id="sizeSetLabel" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink-3)"></span></p>
-      <div class="stepgrid" id="steps"></div>
+        <p class="flabel">Hãng</p>
+        <div class="pick" id="p-hang"></div>
 
-      <div class="field" style="margin-top:16px"><label for="f-chi">Tiền đã trả cho lô này (bỏ trống thì tính theo giá nhập)</label>
-        <input id="f-chi" class="num" inputmode="numeric" placeholder="0"></div>
+        <p class="flabel">Loại hàng</p>
+        <div class="pick" id="p-loai"></div>
 
-      <button class="btn" id="saveImport">Lưu &amp; cộng vào kho</button>
-      <p class="note">Lưu xong, app tự ghi một khoản <b>Chi — Nhập hàng</b> sang sổ thu chi.</p>
+        <div class="two">
+          <div class="field"><label for="n-mau">Màu</label><input id="n-mau" placeholder="Trắng"></div>
+          <div class="field"><label for="n-vt">Vị trí trong kho</label><input id="n-vt" placeholder="Kệ A · Thùng 2"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="n-nhap">Giá nhập</label>
+            <input id="n-nhap" inputmode="numeric" placeholder="1.750.000"></div>
+          <div class="field"><label for="n-ban">Giá bán</label>
+            <input id="n-ban" inputmode="numeric" placeholder="2.290.000"></div>
+        </div>
+      </div>
+
+      <div id="khoiThem" style="display:none">
+        <div class="searchbar" style="margin-bottom:0">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="t-tim" type="search" placeholder="Tìm mẫu đã có trong kho" autocomplete="off">
+        </div>
+        <div id="tDs"></div>
+        <p id="tChon"></p>
+      </div>
+
+      <div id="szBox">
+        <div class="szhead">
+          <span class="sztong" id="szTong">chưa chọn size nào</span>
+          <span class="szhint" id="szNhan"></span>
+        </div>
+        <div class="szgrid" id="szGrid"></div>
+        <div id="szNhanh">
+          <button type="button" data-q="1">Mỗi size 1</button>
+          <button type="button" data-q="2">Mỗi size 2</button>
+          <button type="button" data-q="0">Xoá hết</button>
+        </div>
+        <div id="szTien"></div>
+      </div>
+
+      <div class="stickybar">
+        <button class="btn" id="nLuuTiep" disabled>Lưu &amp; thêm mẫu tiếp</button>
+        <button class="btn ghost" id="nLuuXong" disabled>Lưu &amp; xong</button>
+      </div>
+
+      <div id="phienBox" style="display:none">
+        <div class="phienhead">
+          <div><p class="flabel" style="margin:0">Đã thêm trong lượt này</p>
+            <b id="phienDem" style="font-family:'Roboto Condensed',Roboto,sans-serif;font-size:17px"></b></div>
+          <button class="mini-btn" id="phienXoa">Xoá danh sách</button>
+        </div>
+        <div class="list" id="phienList"></div>
+      </div>
     </section>
 
     <!-- THU CHI -->
@@ -1175,81 +1241,224 @@ $$('.tblbtn').forEach(b=>b.onclick=()=>{
   b.textContent=t.classList.contains('on')?'Ẩn bảng số':'Xem dạng bảng số';
 });
 
-/* ================= NHẬP HÀNG ================= */
-let IMP={}, impMa='';
-function setSizeSet(loai){
-  const keys=dsSize(loai);
-  IMP={}; keys.forEach(k=>IMP[k]=0);
-  $('#sizeSetLabel').textContent=loai==='mu'?'(chỉ có Freesize)':(loai==='giay'||loai==='dep'?'(35 → 45)':'(XS → 3XL)');
-  renderSteps();
-}
-function renderSteps(){
-  $('#steps').innerHTML=Object.keys(IMP).map(s=>'<div class="step'+(IMP[s]>0?' has':'')+'">'
-    +'<div class="sz">'+(String(s).length>3?s:'Size '+s)+'</div>'
-    +'<div class="ct"><button data-s="'+s+'" data-d="-1" aria-label="Bớt '+s+'">−</button>'
-    +'<b class="num">'+IMP[s]+'</b>'
-    +'<button data-s="'+s+'" data-d="1" aria-label="Thêm '+s+'">+</button></div></div>').join('');
-  $$('#steps button').forEach(b=>b.onclick=()=>{IMP[b.dataset.s]=Math.max(0,IMP[b.dataset.s]+(+b.dataset.d));renderSteps()});
-}
-$('#f-loai').onchange=e=>setSizeSet(e.target.value);
+/* ================= NHẬP HÀNG — làm cho ngón tay, nhập liên tục ================= */
 
-/* chọn mẫu có sẵn để nhập thêm */
+let impMode = 'moi';          // 'moi' = mẫu mới · 'them' = về thêm hàng
+let impSizes = {};            // size -> số lượng đang gõ
+let impLoai = 'giay';
+let impMa = '';               // mẫu đang chọn khi ở chế độ "về thêm hàng"
+let phien = [];               // các mẫu đã thêm trong phiên này
+let nhoHang = 'Nike', nhoLoai = 'giay', nhoViTri = '';   // nhớ để đỡ gõ lại
+
+const soDep  = v => { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('vi-VN') : ''; };
+const soThuc = v => Number(String(v).replace(/\D/g, '')) || 0;
+
+/* --- ô tiền tự chấm phẩy khi gõ --- */
+function gnTien(id){
+  const el = $('#' + id);
+  el.addEventListener('input', () => {
+    const vt = el.selectionStart, dai = el.value.length;
+    el.value = soDep(el.value);
+    const lech = el.value.length - dai;
+    try { el.setSelectionRange(Math.max(0, vt + lech), Math.max(0, vt + lech)); } catch (e) {}
+  });
+}
+
+/* --- hàng chip chọn nhanh --- */
+function veChip(hopId, ds, dangChon, khiChon){
+  const h = $('#' + hopId);
+  h.innerHTML = ds.map(o =>
+    '<button type="button" data-v="' + o.v + '" aria-pressed="' + (o.v === dangChon) + '">' + o.t + '</button>').join('');
+  $$('#' + hopId + ' button').forEach(b => b.onclick = () => {
+    $$('#' + hopId + ' button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    khiChon(b.dataset.v);
+  });
+}
+
+/* --- lưới size to, chạm là cộng --- */
+function veSize(){
+  const keys = Object.keys(impSizes);
+  const g = $('#szGrid');
+  if(!keys.length){ g.innerHTML = '<p class="note">Chưa có bộ size.</p>'; return; }
+  g.innerHTML = keys.map(s => {
+    const n = impSizes[s] || 0;
+    return '<button type="button" class="sz' + (n ? ' co' : '') + '" data-s="' + s + '">'
+      + '<span class="lb">' + s + '</span>'
+      + '<span class="n">' + n + '</span>'
+      + (n ? '<span class="tru" data-tru="' + s + '">−</span>' : '')
+      + '</button>';
+  }).join('');
+  $$('#szGrid .sz').forEach(b => b.onclick = e => {
+    const tru = e.target.closest('[data-tru]');
+    const s = b.dataset.s;
+    if(tru){ e.stopPropagation(); impSizes[s] = Math.max(0, (impSizes[s] || 0) - 1); }
+    else impSizes[s] = (impSizes[s] || 0) + 1;
+    veSize(); veTong();
+  });
+  veTong();
+}
+
+function veTong(){
+  const t = Object.values(impSizes).reduce((a, b) => a + (Number(b) || 0), 0);
+  $('#szTong').textContent = t ? (t + ' món') : 'chưa chọn size nào';
+  $('#szTong').className = 'sztong' + (t ? ' co' : '');
+  const von = soThuc($('#n-nhap') ? $('#n-nhap').value : 0);
+  $('#szTien').textContent = (t && von) ? ('Tiền vốn lô này: ' + vnd(t * von)) : '';
+  capNhatNutLuu();
+}
+
+function capNhatNutLuu(){
+  const t = Object.values(impSizes).reduce((a, b) => a + (Number(b) || 0), 0);
+  const coTen = impMode === 'them' ? !!impMa : !!$('#n-ten').value.trim();
+  $('#nLuuTiep').disabled = !(t && coTen);
+  $('#nLuuXong').disabled = !(t && coTen);
+}
+
+function datBoSize(loai, batDau){
+  impLoai = loai;
+  impSizes = {};
+  dsSize(loai).forEach(s => impSizes[s] = 0);
+  if(batDau) Object.keys(batDau).forEach(s => { if(s in impSizes) impSizes[s] = batDau[s]; });
+  $('#szNhan').textContent = loai === 'mu' ? 'Mũ chỉ có Freesize'
+    : (loai === 'giay' || loai === 'dep') ? 'Chạm vào size để cộng · 35 → 45'
+    : 'Chạm vào size để cộng · XS → 3XL';
+  veSize();
+}
+
+/* --- đổi giữa hai chế độ --- */
+function datMode(m){
+  impMode = m;
+  $$('#impMode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+  $('#khoiMoi').style.display = m === 'moi' ? '' : 'none';
+  $('#khoiThem').style.display = m === 'them' ? '' : 'none';
+  if(m === 'moi'){ impMa = ''; datBoSize($('#n-loai') ? impLoai : 'giay'); }
+  else { veDsNhapThem(); }
+  capNhatNutLuu();
+}
+
+/* --- chế độ "về thêm hàng": chọn mẫu có sẵn --- */
 function veDsNhapThem(){
-  const sel=$('#f-mausan');
-  sel.innerHTML='<option value="">— Thêm mẫu mới —</option>'
-    +DB.sp.map(p=>'<option value="'+p.MaSP+'">'+p.Ten+' · '+p.MaSP+'</option>').join('');
+  const q = bare($('#t-tim') ? $('#t-tim').value.trim() : '');
+  const ds = DB.sp.filter(p => !q || bare([p.Ten, p.Hang, p.Mau, p.MaSP].join(' ')).includes(q)).slice(0, 40);
+  const box = $('#tDs');
+  if(!DB.sp.length){ box.innerHTML = '<div class="empty"><b>Kho đang trống</b>Thêm mẫu mới trước đã.</div>'; return; }
+  if(!ds.length){ box.innerHTML = '<div class="empty"><b>Không tìm thấy</b></div>'; return; }
+  box.innerHTML = ds.map(p =>
+    '<button type="button" class="hit' + (p.MaSP === impMa ? ' chon' : '') + '" data-id="' + p.MaSP + '">'
+    + '<div class="th">' + anhSP(p, '') + '</div>'
+    + '<div class="rl"><div class="rt">' + p.Ten + '</div>'
+    + '<div class="rs">' + (p.ViTri || '') + ' · còn ' + tot(p) + '</div></div></button>').join('');
+  $$('#tDs .hit').forEach(b => b.onclick = () => {
+    impMa = b.dataset.id;
+    const p = DB.sp.find(x => x.MaSP === impMa);
+    $('#tChon').textContent = p.Ten;
+    $('#tChon').style.display = '';
+    datBoSize(p.Loai);
+    veDsNhapThem();
+    $('#szBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 }
-$('#f-mausan').onchange=e=>{
-  impMa=e.target.value;
-  const moi=!impMa;
-  $$('#nhapMoi').forEach(x=>x.style.display=moi?'':'none');
-  if(!moi){
-    const p=DB.sp.find(x=>x.MaSP===impMa);
-    setSizeSet(p.Loai);
-    $('#impTitle').textContent='Nhập thêm: '+p.Ten;
-  } else {
-    setSizeSet($('#f-loai').value);
-    $('#impTitle').textContent='Thêm mẫu mới';
-  }
-};
 
-$('#saveImport').onclick=async()=>{
-  const tong=Object.values(IMP).reduce((a,b)=>a+b,0);
-  if(!tong){toast('Chưa nhập số lượng size nào');return}
-  const tienChi=Number(String($('#f-chi').value).replace(/\D/g,''))||0;
+/* --- danh sách đã thêm trong phiên --- */
+function vePhien(){
+  const box = $('#phienBox');
+  if(!phien.length){ box.style.display = 'none'; return; }
+  box.style.display = '';
+  $('#phienDem').textContent = phien.length + ' mẫu · ' + phien.reduce((a, x) => a + x.tong, 0) + ' món';
+  $('#phienList').innerHTML = phien.slice().reverse().map(x =>
+    '<div class="row"><div class="tick in"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>'
+    + '<div class="rl"><div class="rt">' + x.ten + '</div><div class="rs">' + x.tong + ' món · ' + x.ma + '</div></div>'
+    + '<button class="mini-btn" data-anh="' + x.ma + '">Thêm ảnh</button></div>').join('');
+  $$('#phienList [data-anh]').forEach(b => b.onclick = () => {
+    const p = DB.sp.find(x => x.MaSP === b.dataset.anh);
+    if(!p){ toast('Chưa tải xong mẫu này'); return; }
+    cur = p; moSua();
+  });
+}
 
-  if(impMa){
-    QUEUE.push({action:'nhap',body:{ma:impMa,sizes:Object.assign({},IMP),tienChi,ht:'Chuyển khoản'}});
-    const p=DB.sp.find(x=>x.MaSP===impMa);
-    Object.keys(IMP).forEach(s=>{if(IMP[s])p.ton[s]=(Number(p.ton[s])||0)+IMP[s]});
+/* --- lưu --- */
+function luuMau(tiep){
+  const tong = Object.values(impSizes).reduce((a, b) => a + (Number(b) || 0), 0);
+  if(!tong){ toast('Chưa chọn size nào'); return; }
+
+  if(impMode === 'them'){
+    if(!impMa){ toast('Chưa chọn mẫu'); return; }
+    const p = DB.sp.find(x => x.MaSP === impMa);
+    const von = Number(p.GiaNhap) || 0;
+    QUEUE.push({ action: 'nhap', body: { ma: impMa, sizes: Object.assign({}, impSizes), tienChi: von * tong, ht: 'Chuyển khoản' } });
+    Object.keys(impSizes).forEach(s => { if(impSizes[s]) p.ton[s] = (Number(p.ton[s]) || 0) + impSizes[s]; });
+    if(von) themChiTam(p.Ten, tong, von * tong);
+    phien.push({ ma: impMa, ten: p.Ten, tong });
+    datBoSize(p.Loai);
   } else {
-    const ten=$('#f-ten').value.trim();
-    if(!ten){toast('Chưa có tên sản phẩm');return}
-    const sp={Ten:ten,Hang:$('#f-hang').value,Loai:$('#f-loai').value,Mau:$('#f-mau').value,
-      GiaNhap:Number(String($('#f-nhap').value).replace(/\D/g,''))||0,
-      GiaBan:Number(String($('#f-ban').value).replace(/\D/g,''))||0,
-      ViTri:$('#f-vt').value};
-    // Mã do app tự đặt và máy chủ giữ nguyên — nhờ vậy nhập hàng lúc mất mạng
-    // rồi bán ngay vẫn khớp, không cần chờ Google trả mã về.
-    const d=new Date();
-    const maTam=(bare(sp.Hang).replace(/[^a-z]/g,'').slice(0,2).toUpperCase()||'SP')
-      +'-'+String(d.getFullYear()).slice(2)+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)
-      +'-'+String(Math.floor(Math.random()*9000)+1000);
-    QUEUE.push({action:'themSP',body:{sp:Object.assign({MaSP:maTam},sp),sizes:Object.assign({},IMP),tienChi,ht:'Chuyển khoản'}});
-    DB.sp.push(Object.assign({MaSP:maTam,ton:Object.assign({},IMP)},sp));
+    const ten = $('#n-ten').value.trim();
+    if(!ten){ toast('Chưa có tên sản phẩm'); return; }
+    const giaNhap = soThuc($('#n-nhap').value), giaBan = soThuc($('#n-ban').value);
+    const sp = { Ten: ten, Hang: nhoHang, Loai: impLoai, Mau: $('#n-mau').value.trim(),
+                 GiaNhap: giaNhap, GiaBan: giaBan, ViTri: $('#n-vt').value.trim() };
+    const d = new Date();
+    const ma = (bare(sp.Hang).replace(/[^a-z]/g, '').slice(0, 2).toUpperCase() || 'SP')
+      + '-' + String(d.getFullYear()).slice(2) + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2)
+      + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+
+    QUEUE.push({ action: 'themSP', body: { sp: Object.assign({ MaSP: ma }, sp), sizes: Object.assign({}, impSizes),
+                                           tienChi: giaNhap * tong, ht: 'Chuyển khoản' } });
+    DB.sp.push(Object.assign({ MaSP: ma, ton: Object.assign({}, impSizes), AnhID: '' }, sp));
+    if(giaNhap) themChiTam(ten, tong, giaNhap * tong);
+    phien.push({ ma, ten, tong });
+
+    nhoViTri = sp.ViTri;
+    $('#n-ten').value = ''; $('#n-mau').value = '';
+    $('#n-nhap').value = ''; $('#n-ban').value = '';
+    datBoSize(impLoai);
   }
-  if(tienChi){
-    DB.tc.unshift({MaPhieu:'tam'+Date.now(),ThoiGian:new Date().toISOString(),Loai:'Chi',
-      DanhMuc:'Nhập hàng',NoiDung:(impMa?'Nhập thêm':'Mẫu mới')+' · '+tong+' món',
-      SoTien:tienChi,HinhThuc:'Chuyển khoản',NguoiTao:ME.u});
+
+  luuDB(); luuQueue(); vePhien(); veTatCa(); flush();
+  toast('Đã thêm ' + tong + ' món vào kho');
+
+  if(tiep){
+    if(impMode === 'moi') setTimeout(() => $('#n-ten').focus(), 120);
+  } else {
+    go('tim');
   }
-  luuDB(); luuQueue();
-  Object.keys(IMP).forEach(k=>IMP[k]=0); renderSteps();
-  ['f-ten','f-mau','f-vt','f-chi'].forEach(id=>$('#'+id).value='');
-  toast('Đã thêm '+tong+' món vào kho');
-  veTatCa(); flush();
-};
-$('#photoBtn').onclick=()=>toast('Bản này chưa gắn camera — sẽ làm ở bước sau');
+}
+
+function themChiTam(ten, tong, tien){
+  DB.tc.unshift({ MaPhieu: 'tam' + Date.now() + Math.random(), ThoiGian: new Date().toISOString(),
+    Loai: 'Chi', DanhMuc: 'Nhập hàng', NoiDung: ten + ' · ' + tong + ' món',
+    SoTien: tien, HinhThuc: 'Chuyển khoản', NguoiTao: ME ? ME.u : '' });
+}
+
+/* --- gắn sự kiện, gọi một lần lúc mở app --- */
+function nhapKhoiDong(){
+  veChip('p-hang', [
+    { v: 'Nike', t: 'Nike' }, { v: 'Adidas', t: 'Adidas' }, { v: 'Puma', t: 'Puma' },
+    { v: 'New Balance', t: 'N.Balance' }, { v: 'New Era', t: 'New Era' }, { v: 'Khác', t: 'Khác' }
+  ], nhoHang, v => { nhoHang = v; });
+
+  veChip('p-loai', [
+    { v: 'giay', t: 'Giày' }, { v: 'dep', t: 'Dép' }, { v: 'ao', t: 'Áo' },
+    { v: 'quan', t: 'Quần' }, { v: 'dobo', t: 'Đồ bộ' }, { v: 'mu', t: 'Mũ' }
+  ], nhoLoai, v => { nhoLoai = v; datBoSize(v); });
+
+  gnTien('n-nhap'); gnTien('n-ban');
+  $('#n-nhap').addEventListener('input', veTong);
+  $('#n-ten').addEventListener('input', capNhatNutLuu);
+
+  $$('#impMode button').forEach(b => b.onclick = () => datMode(b.dataset.m));
+  $$('#szNhanh button').forEach(b => b.onclick = () => {
+    const q = Number(b.dataset.q);
+    Object.keys(impSizes).forEach(s => impSizes[s] = q);
+    veSize();
+  });
+  $('#t-tim').addEventListener('input', veDsNhapThem);
+  $('#nLuuTiep').onclick = () => luuMau(true);
+  $('#nLuuXong').onclick = () => luuMau(false);
+  $('#phienXoa').onclick = () => { phien = []; vePhien(); };
+
+  datBoSize('giay');
+  datMode('moi');
+}
 
 /* ================= CÀI ĐẶT ================= */
 $('#btnDoiMK').onclick=async()=>{
@@ -1290,7 +1499,7 @@ function go(name){
   $$('#nav button').forEach(b=>b.setAttribute('aria-current',String(b.dataset.go===name)));
   $('.stage').scrollTop=0;
   if(name==='bao')veDash();
-  if(name==='nhap')veDsNhapThem();
+  if(name==='nhap'&&impMode==='them')veDsNhapThem();
   if(name==='cai')veDsND();
 }
 $$('#nav button').forEach(b=>b.onclick=()=>{
@@ -1573,7 +1782,7 @@ $('#uLuu').onclick = async ()=>{
 (function(){
   const th=LS.getItem('cch_theme'); if(th)document.documentElement.dataset.theme=th;
   if(API)$('#apiUrl').value=API;
-  setSizeSet('giay');
+  nhapKhoiDong();
   if(TOKEN&&ME){ vaoApp(); pull().then(flush); }
   else { $('#login').style.display=''; }
   veSync();

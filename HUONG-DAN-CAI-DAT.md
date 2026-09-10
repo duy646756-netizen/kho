@@ -204,19 +204,24 @@ Trên iPhone sẽ hỏi *Chụp ảnh* hay *Chọn từ thư viện*.
 App **tự nén ảnh xuống còn khoảng 50KB** rồi đẩy lên Drive của bạn, nên tra cứu vẫn mở tức thì.
 Ảnh nằm trong thư mục Drive *"Anh san pham Chi Chinh Hang"*. Thêm ảnh cần có mạng.
 
-### Chỉ khi nhập 100 mẫu đầu tiên — dùng bảng NhapNhanh
+### Nhập 100 mẫu đầu tiên — ngay trong app
 
-Ngồi máy tính gõ một lượt sẽ nhanh hơn bấm trên điện thoại. Mở bảng tính, tab **NhapNhanh**,
-**mỗi mẫu một dòng**: tên, hãng, **loại** (bắt buộc chọn), màu, giá nhập, giá bán, vị trí,
-rồi điền số lượng vào **đúng nhóm cột size**:
+Mở **Nhập hàng**, chọn **Mẫu mới**. Thiết kế để gõ liên tục:
 
-- 🟦 **Xanh 35 → 45** cho Giày, Dép
-- 🟪 **Tím XS → 3XL** cho Áo, Quần, Đồ bộ
-- 🟧 **Cam Freesize** cho Mũ
+1. Gõ tên · chạm chip chọn **Hãng** và **Loại** · điền màu, vị trí, giá
+2. **Chạm thẳng vào ô size để cộng 1** — chạm dấu **−** góc trên để bớt.
+   Về cả lô đều nhau thì bấm **Mỗi size 1** hoặc **Mỗi size 2**
+3. Bấm **LƯU & THÊM MẪU TIẾP**
 
-Xong bấm menu **Chỉ Chính Hãng → ⬆ Nạp hàng vào kho**, rồi vào app bấm **Cài đặt → Tải lại**.
+Lưu xong app **giữ lại Hãng, Loại và Vị trí**, chỉ xoá tên, màu, giá và size —
+vì nhập cả lô thường cùng hãng, cùng kệ. Mẫu tiếp theo gõ nhanh hơn nhiều.
 
-Ảnh thì cứ chụp dần trong app sau, không cần làm cùng lúc.
+Dưới cùng có bảng **Đã thêm trong lượt này** đếm số mẫu, số món, kèm nút **Thêm ảnh** cho từng mẫu.
+
+**Mẫu cũ về thêm hàng:** chuyển sang **Về thêm hàng**, tìm tên, chạm chọn, rồi chạm size. Không phải khai lại gì.
+
+> Bảng `NhapNhanh` trong Google Sheet vẫn còn dùng được nếu bạn thích gõ bàn phím máy tính,
+> nhưng **không bắt buộc nữa** — làm hết trong app được rồi.
 
 ---
 
